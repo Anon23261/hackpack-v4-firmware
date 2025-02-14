@@ -1,9 +1,3 @@
-#
-# HACKPACK V4 FIRMWARE BOOTCONFIG
-#
-# ------------------------------------------------------------------------------------
-
-
 # Pi Zero 2W Configuration for Hackpack v4
 
 # Display Configuration
