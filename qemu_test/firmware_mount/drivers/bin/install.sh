@@ -1,43 +1,14 @@
 #!/bin/bash
 
-# Function to check if a package is installed
-check_package() {
-    if ! command -v $1 &> /dev/null; then
-        echo "Error: Required package '$1' is not installed"
-        return 1
-    fi
-    return 0
-}
-
-# Check for required packages
-required_packages=("python3" "pip3" "git")
-for package in "${required_packages[@]}"; do
-    if ! check_package $package; then
-        echo "Please install required packages first:"
-        echo "sudo apt-get update && sudo apt-get install -y python3 python3-pip git"
-        exit 1
-    fi
-}
+# Install prerequisites
 
 # Detect Pi model
 PI_MODEL=$(/home/pi/firmware/bin/detect_model.sh)
 
-# Verify we're on a supported model
-if [ "$PI_MODEL" != "zero2" ] && [ "$PI_MODEL" != "zerow" ]; then
-    echo "Error: Unsupported Raspberry Pi model detected"
-    echo "This firmware only supports Pi Zero W and Pi Zero 2W"
-    exit 1
-fi
-
-# Install Python packages with error checking
-echo "Installing Python packages..."
-for package in "python-uinput" "RPi.GPIO" "spidev"; do
-    echo "Installing $package..."
-    if ! sudo pip3 install $package; then
-        echo "Error: Failed to install $package"
-        exit 1
-    fi
-done
+# Install Python packages using pip3
+sudo pip3 install python-uinput
+sudo pip3 install RPi.GPIO
+sudo pip3 install spidev
 
 # Overlay appropriate config.txt based on Pi model
 echo ""

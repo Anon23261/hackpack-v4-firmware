@@ -2,63 +2,13 @@
 
 #!/bin/bash
 
-# Safety checks and backup function
-backup_config() {
-    local backup_dir="/home/pi/firmware_backup_$(date +%Y%m%d_%H%M%S)"
-    echo "Creating backup in $backup_dir"
-    mkdir -p "$backup_dir"
-    
-    # Backup important system files
-    if [ -f /boot/config.txt ]; then
-        cp /boot/config.txt "$backup_dir/"
-    fi
-    if [ -f /boot/cmdline.txt ]; then
-        cp /boot/cmdline.txt "$backup_dir/"
-    fi
-    
-    echo "Backup completed. To restore, use: sudo cp $backup_dir/* /boot/"
-}
-
-# Check if running as root
-if [ "$EUID" -ne 0 ]; then
-    echo "Please run as root (use sudo)"
-    exit 1
-}
-
-# Check if we're running on a Raspberry Pi
-if ! grep -q "Raspberry Pi" /proc/cpuinfo; then
-    echo "This script must be run on a Raspberry Pi"
-    exit 1
-}
-
 # Make detect_model.sh executable
 chmod +x /home/pi/firmware/bin/detect_model.sh
 
 # Detect Pi model
 PI_MODEL=$(/home/pi/firmware/bin/detect_model.sh)
 
-if [ "$PI_MODEL" = "unknown" ]; then
-    echo "Error: Unsupported Raspberry Pi model detected"
-    echo "This firmware only supports Pi Zero W and Pi Zero 2W"
-    exit 1
-}
-
 echo "Detected Raspberry Pi model: $PI_MODEL"
-
-# Create backup before proceeding
-echo "Creating backup of current configuration..."
-backup_config
-
-# Confirm before proceeding
-echo ""
-echo "WARNING: This will install Hackpack v4 firmware for $PI_MODEL"
-echo "A backup of your current configuration has been created"
-read -p "Do you want to proceed? (y/n) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Installation cancelled"
-    exit 1
-fi
 
 # Install basic system dependencies
 echo ""
