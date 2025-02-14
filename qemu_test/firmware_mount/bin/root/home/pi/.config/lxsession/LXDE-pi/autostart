@@ -1,5 +1,0 @@
-@lxpanel --profile LXDE-pi
-@pcmanfm --desktop --profile LXDE-pi
-@xscreensaver -no-splash
-@point-rpi
-@sudo bash /home/pi/firmware/bin/boot.sh
