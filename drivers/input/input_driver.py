@@ -21,6 +21,9 @@ import math
 import socket
 import fcntl
 import commands
+import platform
+import usb.core
+import usb.util
 
 # Turn on flood of messages
 DEBUG = False
@@ -327,11 +330,56 @@ class ButtonState:
             print ("Switching to ARROW mode")
 
 
+def detect_raspberry_pi_model():
+    model = platform.uname().machine
+    if 'armv6' in model:
+        return 'Zero W'
+    elif 'armv7' in model:
+        return 'Zero 2W'
+    else:
+        return 'Unknown'
+
+
+def initialize_otg_usb():
+    # Detect the architecture
+    architecture = platform.architecture()[0]
+    pi_model = detect_raspberry_pi_model()
+
+    if pi_model == 'Zero W' and architecture == '32bit':
+        # Find the USB device for Zero W (32-bit)
+        dev = usb.core.find(idVendor=0x03EB, idProduct=0x6124)  # Update with the correct vendor/product IDs
+    elif pi_model == 'Zero 2W' and architecture == '64bit':
+        # Find the USB device for Zero 2W (64-bit)
+        dev = usb.core.find(idVendor=0x03EB, idProduct=0x6125)  # Update with the correct vendor/product IDs
+    else:
+        print('Unsupported model or architecture')
+        return
+
+    # Check if the device was found
+    if dev is None:
+        print('USB device not found')
+        return
+
+    # Detach the kernel driver if necessary
+    if dev.is_kernel_driver_active(0):
+        dev.detach_kernel_driver(0)
+
+    # Claim the device
+    usb.util.claim_interface(dev, 0)
+    print('OTG USB initialized for mouse and keyboard')
+
+
 def main():
     """Typical polling loop."""
     global JOYSTICK_MODE, JOYSTICK_ON, TOUCH_ON, BUTTONS_ON
     global virtual_keyboard, virtual_mouse, virtual_touchscreen
     global ts, up_down, left_right
+
+    pi_model = detect_raspberry_pi_model()
+    print(f'Detected Raspberry Pi Model: {pi_model}')
+
+    # Initialize OTG USB support
+    initialize_otg_usb()
 
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
@@ -404,31 +452,6 @@ def main():
     SOCK.bind(SOCKET_PATH)
     os.chmod(SOCKET_PATH, 0o777)
     fcntl.fcntl(SOCK, fcntl.F_SETFL, os.O_NONBLOCK)
-
-    # Add USB handling code here.
-    import usb.core
-    import usb.util
-
-    # find the USB device
-    dev = usb.core.find(idVendor=0x03EB, idProduct=0x6124)
-
-    # was it found?
-    if dev is None:
-        raise ValueError('Device not found')
-
-    # detach the kernel driver
-    if dev.is_kernel_driver_active(0):
-        dev.detach_kernel_driver(0)
-
-    # claim the device
-    usb.util.claim_interface(dev, 0)
-
-    # release the device
-    usb.util.release_interface(dev, 0)
-
-    # reattach the kernel driver
-    if dev.is_kernel_driver_active(0):
-        dev.attach_kernel_driver(0)
 
     # Big loop incoming.
     while(1):

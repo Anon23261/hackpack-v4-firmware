@@ -96,7 +96,7 @@ the joystick and control buttons.
 
 ### Raspberry Pi Model Detection
 
-- The firmware can automatically detect whether the device is a Raspberry Pi Zero W or Zero 2W, ensuring optimal functionality based on the hardware model.
+- The firmware can automatically detect whether the device is a Raspberry Pi Zero W (32-bit) or Zero 2W (64-bit), ensuring optimal functionality based on the hardware model.
 
 ## System Control
 
