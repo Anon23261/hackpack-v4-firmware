@@ -105,7 +105,8 @@ if ! sudo apt-get install --no-install-recommends -y \
 fi
 
 # Install Python security and development packages
-sudo pip3 install --no-cache-dir \
+echo "Installing Python packages..."
+if ! sudo pip3 install --no-cache-dir \
     requests \
     flask \
     fastapi \
@@ -118,7 +119,10 @@ sudo pip3 install --no-cache-dir \
     pytest \
     black \
     pylint \
-    jupyter
+    jupyter; then
+    echo "Error: Failed to install Python packages"
+    exit 1
+fi
 
 # Run Driver install script
 
