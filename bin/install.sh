@@ -24,24 +24,25 @@ print_message() {
 
 # Print error message and exit
 print_error() {
-    print_message "\n❌ Error: $1" "$RED"
+    print_message "\n[ERROR] $1" "$RED"
     exit 1
 }
 
 # Print success message
 print_success() {
-    print_message "\n✓ $1" "$GREEN"
+    print_message "\n[OK] $1" "$GREEN"
 }
 
 # Print warning message
 print_warning() {
-    print_message "\n⚠️  $1" "$YELLOW"
+    print_message "\n[WARN] $1" "$YELLOW"
 }
 
 # Print step message
 print_step() {
-    print_message "\n📦 Step $1/$TOTAL_STEPS: $2" "$BLUE"
+    print_message "\n[*] Step $1/$TOTAL_STEPS: $2" "$BLUE"
 }
+
 
 # Show progress
 show_progress() {
