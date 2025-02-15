@@ -142,7 +142,7 @@ sudo bash /home/pi/firmware/cli/bin/install.sh
 echo ""
 echo "--------------------------------------------------"
 echo ""
-echo "(4 of 4) Setting up development environment..."
+echo "(4 of 5) Setting up development environment..."
 echo ""
 echo "--------------------------------------------------"
 echo ""
@@ -153,9 +153,19 @@ echo 'source /home/pi/venv/bin/activate' >> /home/pi/.bashrc
 
 # Set up development directories
 mkdir -p /home/pi/projects
-mkdir -p /home/pi/projects/iot
-mkdir -p /home/pi/projects/api
-mkdir -p /home/pi/projects/security
+mkdir -p /home/pi/projects/payloads
+
+echo ""
+echo "--------------------------------------------------"
+echo ""
+echo "(5 of 5) Installing Python development packages..."
+echo ""
+echo "--------------------------------------------------"
+echo ""
+
+# Activate virtual environment and install packages
+source /home/pi/venv/bin/activate
+pip install -r /home/pi/firmware/requirements.txt
 
 # Create helpful scripts
 cat > /home/pi/projects/scan_network.py << 'EOL'

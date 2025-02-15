@@ -16,6 +16,7 @@ import math
 import socket
 import fcntl
 import commands
+from tools_handler import tools_handler
 
 # Turn on flood of messages
 DEBUG = False
@@ -476,104 +477,98 @@ def main():
                             print("Released R Mouse (Select) Button.")
                     ButtonState.select_counter = 0
             else:
-                # Select Button/Space
+                # Select Button - Stop Current Process
                 if GPIO.input(SELECT_BUTTON):
                     if (ButtonState.space_counter == DEBOUNCE_POLLS_MIN):
                         if DEBUG:
-                            print("Pressed Space (Select) Button.")
-                        virtual_keyboard.emit(uinput.KEY_SPACE, 1)
+                            print("Pressed Select Button - Stop Process")
+                        tools_handler.button_select_action()
                         ButtonState.space_pressed = True
                         ButtonState.space_counter += 1
                     elif (ButtonState.space_counter < DEBOUNCE_POLLS_MIN):
                         ButtonState.space_counter += 1
                 else:
                     if (ButtonState.space_counter >= DEBOUNCE_POLLS_MIN):
-                        virtual_keyboard.emit(uinput.KEY_SPACE, 0)
                         ButtonState.space_pressed = False
                         if DEBUG:
-                            print("Released Space (Select) Button.")
+                            print("Released Select Button")
                     ButtonState.space_counter = 0
 
-                # Start Button/Enter
+                # Start Button - Wireshark
                 if GPIO.input(START_BUTTON):
                     if (ButtonState.enter_counter == DEBOUNCE_POLLS_MIN):
                         if DEBUG:
-                            print("Pressed Enter (Start) Button.")
-                        virtual_keyboard.emit(uinput.KEY_ENTER, 1)
+                            print("Pressed Start Button - Launch Wireshark")
+                        tools_handler.button_start_action()
                         ButtonState.enter_pressed = True
                         ButtonState.enter_counter += 1
                     elif (ButtonState.enter_counter < DEBOUNCE_POLLS_MIN):
                         ButtonState.enter_counter += 1
                 else:
                     if (ButtonState.enter_counter >= DEBOUNCE_POLLS_MIN):
-                        virtual_keyboard.emit(uinput.KEY_ENTER, 0)
                         ButtonState.enter_pressed = False
                         if DEBUG:
-                            print("Released Enter (Start) Button.")
+                            print("Released Start Button")
                     ButtonState.enter_counter = 0
 
-            # A Button
+            # A Button - Network Scanner
             if GPIO.input(A_BUTTON):
                 if (ButtonState.a_counter == DEBOUNCE_POLLS_MIN):
                     if DEBUG:
-                        print("Pressed A Button.")
-                    virtual_keyboard.emit(uinput.KEY_A, 1)
+                        print("Pressed A Button - Network Scanner")
+                    tools_handler.button_a_action()
                     ButtonState.a_counter += 1
                 elif (ButtonState.a_counter < DEBOUNCE_POLLS_MIN):
                     ButtonState.a_counter += 1
             else:
                 if (ButtonState.a_counter >= DEBOUNCE_POLLS_MIN):
-                    virtual_keyboard.emit(uinput.KEY_A, 0)
                     if DEBUG:
-                        print("Released A Button.")
+                        print("Released A Button")
                 ButtonState.a_counter = 0
 
-            # B Button
+            # B Button - API Server
             if GPIO.input(B_BUTTON):
                 if (ButtonState.b_counter == DEBOUNCE_POLLS_MIN):
                     if DEBUG:
-                        print("Pressed B Button.")
-                    virtual_keyboard.emit(uinput.KEY_B, 1)
+                        print("Pressed B Button - API Server")
+                    tools_handler.button_b_action()
                     ButtonState.b_counter += 1
                 elif (ButtonState.b_counter < DEBOUNCE_POLLS_MIN):
                     ButtonState.b_counter += 1
             else:
                 if (ButtonState.b_counter >= DEBOUNCE_POLLS_MIN):
-                    virtual_keyboard.emit(uinput.KEY_B, 0)
                     if DEBUG:
-                        print("Released B Button.")
+                        print("Released B Button")
                 ButtonState.b_counter = 0
 
-            # X Button
+            # X Button - Code Quality
             if GPIO.input(X_BUTTON):
                 if (ButtonState.x_counter == DEBOUNCE_POLLS_MIN):
                     if DEBUG:
-                        print("Pressed X Button.")
-                    virtual_keyboard.emit(uinput.KEY_X, 1)
+                        print("Pressed X Button - Code Quality")
+                    tools_handler.button_x_action()
                     ButtonState.x_counter += 1
                 elif (ButtonState.x_counter < DEBOUNCE_POLLS_MIN):
                     ButtonState.x_counter += 1
             else:
                 if (ButtonState.x_counter >= DEBOUNCE_POLLS_MIN):
-                    virtual_keyboard.emit(uinput.KEY_X, 0)
                     if DEBUG:
-                        print("Released X Button.")
+                        print("Released X Button")
                 ButtonState.x_counter = 0
 
-            # Y Button
+            # Y Button - Python REPL
             if GPIO.input(Y_BUTTON):
                 if (ButtonState.y_counter == DEBOUNCE_POLLS_MIN):
                     if DEBUG:
-                        print("Pressed Y Button.")
-                    virtual_keyboard.emit(uinput.KEY_Y, 1)
+                        print("Pressed Y Button - Python REPL")
+                    tools_handler.button_y_action()
                     ButtonState.y_counter += 1
                 elif (ButtonState.y_counter < DEBOUNCE_POLLS_MIN):
                     ButtonState.y_counter += 1
             else:
                 if (ButtonState.y_counter >= DEBOUNCE_POLLS_MIN):
-                    virtual_keyboard.emit(uinput.KEY_Y, 0)
                     if DEBUG:
-                        print("Released Y Button.")
+                        print("Released Y Button")
                 ButtonState.y_counter = 0
 
         # Poll Joystick for Updates in Joystick Mode, use arrow keys
