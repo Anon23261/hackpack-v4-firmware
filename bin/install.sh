@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e  # Exit on error
 
+# Progress tracking
+CURRENT_STEP=1
+TOTAL_STEPS=6  # Total number of installation steps
+
 # Color definitions
 RED='\033[0;31m'
 GREEN='\033[0;32m'
