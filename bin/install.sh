@@ -131,7 +131,6 @@ if ! sudo apt-get install --no-install-recommends -y \
     nmap \
     wireshark \
     tcpdump \
-    netcat-traditional || netcat-openbsd \
     sqlite3 \
     nginx \
     screen \
@@ -140,25 +139,44 @@ if ! sudo apt-get install --no-install-recommends -y \
     exit 1
 fi
 
+# Try to install netcat
+echo "Installing netcat..."
+if ! sudo apt-get install -y netcat-traditional; then
+    echo "Trying alternative netcat package..."
+    if ! sudo apt-get install -y netcat-openbsd; then
+        echo "Warning: Could not install netcat. Continuing anyway..."
+    fi
+fi
+
 # Install Python security and development packages
 echo "Installing Python packages..."
-if ! sudo pip3 install --no-cache-dir \
-    requests \
-    flask \
-    fastapi \
-    uvicorn \
-    sqlalchemy \
-    python-dotenv \
-    pwntools \
-    scapy \
-    cryptography \
-    pytest \
-    black \
-    pylint \
-    jupyter; then
+
+# Create a temporary requirements file
+cat > /tmp/requirements.txt << 'EOL'
+requests
+flask
+fastapi
+uvicorn
+sqlalchemy
+python-dotenv
+pwntools
+scapy
+cryptography
+pytest
+black
+pylint
+jupyter
+EOL
+
+# Install packages using pip with --break-system-packages
+if ! sudo pip3 install --no-cache-dir --break-system-packages -r /tmp/requirements.txt; then
     echo "Error: Failed to install Python packages"
+    rm /tmp/requirements.txt
     exit 1
 fi
+
+# Clean up
+rm /tmp/requirements.txt
 
 # Run Driver install script
 
