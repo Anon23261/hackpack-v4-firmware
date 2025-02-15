@@ -186,9 +186,19 @@ if ! sudo apt-get install --no-install-recommends -y \
     sqlite3 \
     nginx \
     screen \
-    tmux; then
+    tmux \
+    cmake \
+    pkg-config \
+    rustc \
+    cargo; then
     echo "Error: Failed to install system packages"
     exit 1
+fi
+
+# Upgrade pip to latest version
+echo "Upgrading pip..."
+if ! sudo pip3 install --upgrade pip; then
+    echo "Warning: Failed to upgrade pip"
 fi
 
 # Add user to wireshark group in test mode
