@@ -14,23 +14,36 @@
 
 ## 🚀 What is Hackpack?
 
-Hackpack v4 is your comprehensive IoT security and development platform! Originally a gaming device, it has been transformed into a powerful tool for IoT security testing, API development, and network analysis. Supporting both Raspberry Pi Zero W and Zero 2W, it's perfect for portable security testing and development.
-
-### 🛠️ Security Features
-
-- 🔍 Network Analysis Tools (nmap, wireshark, tcpdump)
-- 🛡️ Security Testing Framework (pwntools, scapy)
-- 🔐 Cryptography Tools
-- 📡 Network Scanner
-- 🕵️ Packet Analysis
+Hackpack v4 is your comprehensive Python development platform! Built for the Raspberry Pi Zero W and Zero 2W, it transforms your device into a powerful portable Python workstation with integrated development tools, visual feedback, and USB payload capabilities.
 
 ### 💻 Development Features
 
-- 🌐 API Development (FastAPI, Flask)
-- 🐍 Python Virtual Environment
-- 🧪 Testing Framework (pytest)
-- 📊 Code Quality Tools (black, pylint)
-- 🗄️ Database Support (SQLite, SQLAlchemy)
+- 🐍 Interactive Python Development
+  * IPython shell (A Button)
+  * Jupyter Notebook server (Start Button)
+  * Quick file execution (B Button)
+  * Code quality checks (X Button)
+
+- 🎨 Visual Feedback System
+  * RGB LED status indicators
+  * Process state monitoring
+  * Real-time execution feedback
+
+- 🔧 Development Tools
+  * Black code formatter
+  * Pylint code analyzer
+  * Pytest testing framework
+  * MyPy type checker
+
+- 🌐 Web Development
+  * FastAPI for modern APIs
+  * Uvicorn ASGI server
+  * WebSocket support
+
+- 🎮 USB Payload Development
+  * HID device emulation
+  * Payload generator (Y Button)
+  * Quick deployment tools
 
 ## 🔧 Installation
 
@@ -38,7 +51,6 @@ Hackpack v4 is your comprehensive IoT security and development platform! Origina
 
 #### 🔵 Raspberry Pi Zero W
 ```markdown
-✨ Perfect for Classic Gaming
 📥 Use 32-bit Raspberry Pi OS
 🔗 Download: raspberrypi.com/software
 📦 Select: "Raspberry Pi OS with desktop"
@@ -46,7 +58,7 @@ Hackpack v4 is your comprehensive IoT security and development platform! Origina
 
 #### 🔴 Raspberry Pi Zero 2W (Recommended)
 ```markdown
-🚀 Enhanced Performance
+🚀 Better performance for data processing
 📥 Use 64-bit Raspberry Pi OS
 🔗 Download: raspberrypi.com/software
 📦 Select: "Raspberry Pi OS (64-bit) with desktop"
@@ -146,44 +158,58 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 /home/pi/
 ├── firmware/          # Core system files
 ├── venv/              # Python virtual environment
-└── projects/          # Your development workspace
-    ├── iot/           # IoT-related projects
-    ├── api/           # API development
-    └── security/      # Security tools
+└── projects/          # Your Python workspace
+    └── payloads/      # USB payload scripts
 ```
 
-### Available Tools
-
-#### Network Analysis
-- `scan_network.py`: Discover devices on your network
-- Wireshark: GUI-based packet analysis
-- tcpdump: Command-line packet capture
-- nmap: Network mapping and security scanning
+### Quick Access Buttons
 
 #### Development Tools
-- FastAPI: Modern API development
-- Flask: Lightweight web applications
-- SQLAlchemy: Database ORM
-- pytest: Testing framework
-- black: Code formatter
-- pylint: Code linter
+- A Button: Launch IPython shell
+- B Button: Run current Python file
+- X Button: Run code quality checks
+  * Black formatting
+  * Pylint analysis
+  * Pytest execution
+- Y Button: USB payload generator
+- Start Button: Launch Jupyter Notebook
+- Select Button: Stop current process
 
-#### Security Testing
-- pwntools: CTF framework and exploit development
-- scapy: Packet manipulation
-- cryptography: Cryptographic recipes
+#### Visual Feedback
+- Cyan blinking: Process running
+- Purple solid: Process stalled
+- Green: Success
+- Red: Error/Stop
+- Blue: Processing
 
-### Command-Line Interface
+#### Development Packages
+- Interactive: IPython, Jupyter
+- Quality: Black, Pylint, MyPy, Pytest
+- Web: FastAPI, Uvicorn, WebSockets
+- Data: NumPy, Pandas, Matplotlib
+- Utils: Rich, Tqdm, Python-dotenv
+
+### Development Workflow
 
 ```bash
-# Network scanning
-sudo python3 ~/projects/scan_network.py 192.168.1.0/24
+# Activate environment
+source ~/venv/bin/activate
 
-# Start API server
-python3 ~/projects/api/example_server.py
+# Create new Python file
+touch ~/projects/my_script.py
 
-# Code quality
-black ~/projects/
-pylint ~/projects/
-pytest ~/projects/
+# Edit and run (B Button)
+vim ~/projects/my_script.py
+
+# Check code quality (X Button)
+black .
+pylint *.py
+pytest
+
+# Interactive development (A Button)
+ipython
+
+# Create USB payload (Y Button)
+cd ~/projects/payloads
+python3 generate_payload.py
 ```
