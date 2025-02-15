@@ -3,6 +3,13 @@
 #!/bin/bash
 set -e  # Exit on error
 
+# Test mode flag
+TEST_MODE=false
+if [[ "$1" == "--test" ]]; then
+    TEST_MODE=true
+    echo "Running in test mode..."
+fi
+
 # Safety checks and backup function
 backup_config() {
     local backup_dir="/home/pi/firmware_backup_$(date +%Y%m%d_%H%M%S)"
@@ -36,21 +43,50 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Check if running on a Raspberry Pi
-if [ ! -f /proc/cpuinfo ]; then
-    echo "Error: Cannot access /proc/cpuinfo"
-    exit 1
+# Check if running on a Raspberry Pi (skip in test mode)
+if [ "$TEST_MODE" != "true" ]; then
+    if [ ! -f /proc/cpuinfo ]; then
+        echo "Error: Cannot access /proc/cpuinfo"
+        exit 1
+    fi
+
+    if ! grep -q "Raspberry Pi" /proc/cpuinfo; then
+        echo "Error: This script must be run on a Raspberry Pi"
+        exit 1
+    fi
 fi
 
-if ! grep -q "Raspberry Pi" /proc/cpuinfo; then
-    echo "Error: This script must be run on a Raspberry Pi"
-    exit 1
-fi
-
-# Check if firmware directory exists
-if [ ! -d /home/pi/firmware ]; then
-    echo "Error: Firmware directory not found at /home/pi/firmware"
-    exit 1
+# Check if firmware directory exists (create in test mode)
+if [ "$TEST_MODE" == "true" ]; then
+    mkdir -p /home/pi/firmware/bin
+    mkdir -p /home/pi/firmware/drivers/bin
+    mkdir -p /home/pi/firmware/cli/bin
+    mkdir -p /home/pi/firmware/assets/images
+    mkdir -p /home/pi/firmware/assets/config
+    
+    # Create test detect_model.sh
+    echo '#!/bin/bash
+echo "pi0-2w"' > /home/pi/firmware/bin/detect_model.sh
+    chmod +x /home/pi/firmware/bin/detect_model.sh
+    
+    # Create test requirements.txt
+    echo 'requests==2.31.0
+flask==3.0.0' > /home/pi/firmware/requirements.txt
+    
+    # Create test driver install script
+    echo '#!/bin/bash
+echo "Driver install test"' > /home/pi/firmware/drivers/bin/install.sh
+    chmod +x /home/pi/firmware/drivers/bin/install.sh
+    
+    # Create test CLI install script
+    echo '#!/bin/bash
+echo "CLI install test"' > /home/pi/firmware/cli/bin/install.sh
+    chmod +x /home/pi/firmware/cli/bin/install.sh
+else
+    if [ ! -d /home/pi/firmware ]; then
+        echo "Error: Firmware directory not found at /home/pi/firmware"
+        exit 1
+    fi
 fi
 
 # Make detect_model.sh executable
