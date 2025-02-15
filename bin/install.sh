@@ -1,41 +1,75 @@
 
 
 #!/bin/bash
+set -e  # Exit on error
 
 # Safety checks and backup function
 backup_config() {
     local backup_dir="/home/pi/firmware_backup_$(date +%Y%m%d_%H%M%S)"
     echo "Creating backup in $backup_dir"
-    mkdir -p "$backup_dir"
+    if ! mkdir -p "$backup_dir"; then
+        echo "Error: Failed to create backup directory"
+        return 1
+    fi
     
     # Backup important system files
     if [ -f /boot/config.txt ]; then
-        cp /boot/config.txt "$backup_dir/"
+        if ! cp /boot/config.txt "$backup_dir/"; then
+            echo "Error: Failed to backup config.txt"
+            return 1
+        fi
     fi
     if [ -f /boot/cmdline.txt ]; then
-        cp /boot/cmdline.txt "$backup_dir/"
+        if ! cp /boot/cmdline.txt "$backup_dir/"; then
+            echo "Error: Failed to backup cmdline.txt"
+            return 1
+        fi
     fi
     
     echo "Backup completed. To restore, use: sudo cp $backup_dir/* /boot/"
+    return 0
 }
 
-# Check if running as root
+# Check if script is run as root
 if [ "$EUID" -ne 0 ]; then
-    echo "Please run as root (use sudo)"
+    echo "Error: Please run as root (use sudo)"
     exit 1
 fi
 
-# Check if we're running on a Raspberry Pi
+# Check if running on a Raspberry Pi
+if [ ! -f /proc/cpuinfo ]; then
+    echo "Error: Cannot access /proc/cpuinfo"
+    exit 1
+fi
+
 if ! grep -q "Raspberry Pi" /proc/cpuinfo; then
-    echo "This script must be run on a Raspberry Pi"
+    echo "Error: This script must be run on a Raspberry Pi"
+    exit 1
+fi
+
+# Check if firmware directory exists
+if [ ! -d /home/pi/firmware ]; then
+    echo "Error: Firmware directory not found at /home/pi/firmware"
     exit 1
 fi
 
 # Make detect_model.sh executable
-chmod +x /home/pi/firmware/bin/detect_model.sh
+if [ ! -f /home/pi/firmware/bin/detect_model.sh ]; then
+    echo "Error: detect_model.sh not found"
+    exit 1
+fi
+
+if ! chmod +x /home/pi/firmware/bin/detect_model.sh; then
+    echo "Error: Failed to make detect_model.sh executable"
+    exit 1
+fi
 
 # Detect Pi model
 PI_MODEL=$(/home/pi/firmware/bin/detect_model.sh)
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to detect Raspberry Pi model"
+    exit 1
+fi
 
 if [ "$PI_MODEL" = "unknown" ]; then
     echo "Error: Unsupported Raspberry Pi model detected"
@@ -101,7 +135,9 @@ if ! sudo apt-get install --no-install-recommends -y \
     sqlite3 \
     nginx \
     screen \
-    tmux
+    tmux; then
+    echo "Error: Failed to install system packages"
+    exit 1
 fi
 
 # Install Python security and development packages
@@ -159,8 +195,19 @@ echo "--------------------------------------------------"
 echo ""
 
 # Create Python virtual environment
-python3 -m venv /home/pi/venv
-echo 'source /home/pi/venv/bin/activate' >> /home/pi/.bashrc
+echo "Creating Python virtual environment..."
+if ! python3 -m venv /home/pi/venv; then
+    echo "Error: Failed to create virtual environment"
+    exit 1
+fi
+
+# Add venv activation to bashrc if not already present
+if ! grep -q "source /home/pi/venv/bin/activate" /home/pi/.bashrc; then
+    if ! echo 'source /home/pi/venv/bin/activate' >> /home/pi/.bashrc; then
+        echo "Error: Failed to update .bashrc"
+        exit 1
+    fi
+fi
 
 # Set up development directories
 echo "Creating project directories..."
@@ -292,12 +339,29 @@ sudo chown -R pi:pi /home/pi/
 chmod -R 755 /home/pi/firmware/bin/
 
 # Set wallpaper & aesthetics
-pcmanfm --set-wallpaper /home/pi/firmware/assets/images/wallpaper.png
-sudo cp -r /home/pi/firmware/assets/config /home/pi/.config
+if [ -f /home/pi/firmware/assets/images/wallpaper.png ]; then
+    echo "Setting wallpaper..."
+    if ! pcmanfm --set-wallpaper /home/pi/firmware/assets/images/wallpaper.png; then
+        echo "Warning: Failed to set wallpaper"
+    fi
+fi
+
+if [ -d /home/pi/firmware/assets/config ]; then
+    echo "Copying config files..."
+    if ! sudo cp -r /home/pi/firmware/assets/config /home/pi/.config; then
+        echo "Warning: Failed to copy config files"
+    fi
+fi
 
 # Cleanup
-sudo apt-get purge -y libreoffice wolfram-engine sonic-pi scratch
-sudo apt-get -y autoremove
+echo "Cleaning up unnecessary packages..."
+if ! sudo apt-get purge -y libreoffice wolfram-engine sonic-pi scratch; then
+    echo "Warning: Failed to remove some packages"
+fi
+
+if ! sudo apt-get -y autoremove; then
+    echo "Warning: Failed to autoremove packages"
+fi
 
 echo ""
 echo "--------------------------------------------------"
