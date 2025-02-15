@@ -23,13 +23,13 @@ backup_config() {
 if [ "$EUID" -ne 0 ]; then
     echo "Please run as root (use sudo)"
     exit 1
-}
+fi
 
 # Check if we're running on a Raspberry Pi
 if ! grep -q "Raspberry Pi" /proc/cpuinfo; then
     echo "This script must be run on a Raspberry Pi"
     exit 1
-}
+fi
 
 # Make detect_model.sh executable
 chmod +x /home/pi/firmware/bin/detect_model.sh

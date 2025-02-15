@@ -20,6 +20,11 @@ for package in "${required_packages[@]}"; do
 }
 
 # Detect Pi model
+if [ ! -f "/home/pi/firmware/bin/detect_model.sh" ]; then
+    echo "Error: detect_model.sh script not found"
+    exit 1
+fi
+
 PI_MODEL=$(/home/pi/firmware/bin/detect_model.sh)
 
 # Verify we're on a supported model
