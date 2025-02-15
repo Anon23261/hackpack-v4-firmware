@@ -23,6 +23,7 @@ Hackpack v4 is your ultimate retro-gaming companion! Originally distributed at S
 - 🎮 6 Gaming Buttons
 - 💡 5-NeoPixel LED Light Bar
 - 🧠 Raspberry Pi Zero W/2W Brain
+- 🔌 USB OTG Support for Keyboard/Mouse
 
 ### 🎯 Key Features
 
@@ -76,7 +77,8 @@ Crisp, responsive display with optimized refresh rates for both Pi models:
 ### 🕹️ Controls
 - Precise joystick input
 - 6 responsive gaming buttons
-- USB keyboard support
+- Full USB OTG support for keyboard and mouse
+- Plug-and-play USB peripheral compatibility
 
 ### 💡 LED System
 - 5 programmable RGB NeoPixels
