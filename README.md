@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🎮 Hackpack v4 Firmware
+# 🛡️ Hackpack v4 Firmware
 
-*Your retro-gaming companion powered by Raspberry Pi!*
+*Your IoT Security and Development Platform powered by Raspberry Pi!*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-Raspberry%20Pi-brightgreen.svg)](https://www.raspberrypi.com/)
@@ -14,24 +14,23 @@
 
 ## 🚀 What is Hackpack?
 
-Hackpack v4 is your ultimate retro-gaming companion! Originally distributed at SIGNAL 2018 (Twilio's Developer Conference), it's now been updated to support both Raspberry Pi Zero W and Zero 2W! 
+Hackpack v4 is your comprehensive IoT security and development platform! Originally a gaming device, it has been transformed into a powerful tool for IoT security testing, API development, and network analysis. Supporting both Raspberry Pi Zero W and Zero 2W, it's perfect for portable security testing and development.
 
-### 🛠️ Hardware Features
+### 🛠️ Security Features
 
-- 🖥️ Vibrant Color TFT Screen
-- 🕹️ Responsive Joystick
-- 🎮 6 Gaming Buttons
-- 💡 5-NeoPixel LED Light Bar
-- 🧠 Raspberry Pi Zero W/2W Brain
-- 🔌 USB OTG Support for Keyboard/Mouse
+- 🔍 Network Analysis Tools (nmap, wireshark, tcpdump)
+- 🛡️ Security Testing Framework (pwntools, scapy)
+- 🔐 Cryptography Tools
+- 📡 Network Scanner
+- 🕵️ Packet Analysis
 
-### 🎯 Key Features
+### 💻 Development Features
 
-- 🌈 Custom Browser Interface
-- 🎮 Full Gamepad Support
-- 💫 LED Light Control
-- 🔄 Auto Hardware Detection
-- ⚡ Optimized Performance
+- 🌐 API Development (FastAPI, Flask)
+- 🐍 Python Virtual Environment
+- 🧪 Testing Framework (pytest)
+- 📊 Code Quality Tools (black, pylint)
+- 🗄️ Database Support (SQLite, SQLAlchemy)
 
 ## 🔧 Installation
 
@@ -67,23 +66,32 @@ sudo bash /home/pi/firmware/bin/install.sh
 
 🎯 The firmware will automatically detect your Pi model and apply the optimal configuration!
 
-## 🎮 Features
+## 🔧 Features
 
-### 🖥️ Display
-Crisp, responsive display with optimized refresh rates for both Pi models:
-- Zero W: Classic mode with perfect compatibility
-- Zero 2W: Enhanced mode with improved performance
+### 🔍 Security Tools
+- Network Scanning & Analysis
+  - Discover devices on your network
+  - Analyze network traffic
+  - Monitor IoT device communications
+- Security Testing
+  - Automated security assessments
+  - Protocol analysis
+  - Vulnerability scanning
 
-### 🕹️ Controls
-- Precise joystick input
-- 6 responsive gaming buttons
-- Full USB OTG support for keyboard and mouse
-- Plug-and-play USB peripheral compatibility
+### 🌐 Development Environment
+- API Development
+  - FastAPI with automatic OpenAPI docs
+  - RESTful API templates
+  - API testing tools
+- Code Quality
+  - Automated formatting with black
+  - Linting with pylint
+  - Unit testing with pytest
 
-### 💡 LED System
-- 5 programmable RGB NeoPixels
-- Custom animation support
-- Interactive light patterns
+### 📊 Data Analysis
+- SQLite database support
+- Jupyter notebooks
+- Data visualization tools
 
 ## 🛠️ Development
 
@@ -92,23 +100,31 @@ Crisp, responsive display with optimized refresh rates for both Pi models:
 - Raspberry Pi OS (32/64-bit)
 - Basic Linux knowledge
 
-### Building from Source
+### Quick Start Guide
 ```bash
-# Install development dependencies
-sudo apt-get install git python3-pip nodejs npm
+# Install the platform
+git clone https://github.com/Anon23261/hackpack-v4-firmware.git /home/pi/firmware
+sudo bash /home/pi/firmware/bin/install.sh
 
-# Clone and build
-git clone https://github.com/YourUsername/hackpack-v4-firmware.git
-cd hackpack-v4-firmware
-sudo bash bin/install.sh
+# Start using the tools
+source ~/venv/bin/activate  # Activate Python environment
+
+# Network scanning
+sudo python3 ~/projects/scan_network.py
+
+# Start the API server
+cd ~/projects/api
+python3 example_server.py
 ```
 
 ## 🤝 Contributing
 
 We welcome contributions! Feel free to:
-- 🐛 Report bugs
-- 💡 Suggest features
-- 🔧 Submit pull requests
+- 🔍 Add new security tools
+- 🌐 Improve API templates
+- 📊 Enhance analysis features
+- 🐛 Fix bugs
+- 📚 Improve documentation
 
 ## 📜 License
 
@@ -118,49 +134,56 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 <div align="center">
 
-### 🎮 Happy Gaming! 🕹️
+### 🛡️ Secure Development & Analysis! 💻
 
 </div>
 
-### Get the codebase
+## 📚 Detailed Documentation
 
-To get started, clone this repo into `/home/pi/firmware`. The codebase depends on
-being installed at /home/pi/firmware currently.
+### Project Structure
 
-Once cloned locally, run:
+```
+/home/pi/
+├── firmware/          # Core system files
+├── venv/              # Python virtual environment
+└── projects/          # Your development workspace
+    ├── iot/           # IoT-related projects
+    ├── api/           # API development
+    └── security/      # Security tools
+```
 
-`sudo bash /home/pi/firmware/bin/install.sh`
+### Available Tools
 
-This master install script, in turn, runs the install
-scripts for each system component - drivers, and kiosk.
+#### Network Analysis
+- `scan_network.py`: Discover devices on your network
+- Wireshark: GUI-based packet analysis
+- tcpdump: Command-line packet capture
+- nmap: Network mapping and security scanning
 
-## Functionality
+#### Development Tools
+- FastAPI: Modern API development
+- Flask: Lightweight web applications
+- SQLAlchemy: Database ORM
+- pytest: Testing framework
+- black: Code formatter
+- pylint: Code linter
 
-### Hardware
-
-#### Onboard Screen
-
-Your Hackpack v4 is equipped with a capacitive-touch
-screen, which duplicates the video output that can also be displayed normally via the HDMI output of the
-Raspberry Pi.
-
-#### Onboard LEDs
-
-What Hackpack would be complete without NeoPixels? Your
-Hackpack v4 sports 5 RGB NeoPixels, with a custom-built
-unix socket that lets you control light patterns from
-
-####  Onboard Gamepad
-
-The `/drivers` directory contains all functionality
-that drives the custom inputs on the device - namely
-the joystick and control buttons.
-
-## System Control
+#### Security Testing
+- pwntools: CTF framework and exploit development
+- scapy: Packet manipulation
+- cryptography: Cryptographic recipes
 
 ### Command-Line Interface
 
-`hackpack kiosk start` - starts the kiosk webview
-`hackpack kiosk stop` - stops the kiosk webview
+```bash
+# Network scanning
+sudo python3 ~/projects/scan_network.py 192.168.1.0/24
 
-`hackpack lights led_scanner` - play the led scanner light pattern
+# Start API server
+python3 ~/projects/api/example_server.py
+
+# Code quality
+black ~/projects/
+pylint ~/projects/
+pytest ~/projects/
+```
