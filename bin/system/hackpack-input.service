@@ -1,0 +1,14 @@
+[Unit]
+Description=HackPack v4 Input Driver Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/pi/firmware
+ExecStart=/home/pi/firmware/venv/bin/python3 drivers/input/input_driver.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

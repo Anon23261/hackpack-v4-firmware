@@ -8,29 +8,30 @@ from pathlib import Path
 import RPi.GPIO as GPIO
 from time import sleep
 
+
 class ToolsHandler:
     def __init__(self):
         self.home = str(Path.home())
         self.current_process = None
         self.stop_requested = False
-        
+
         # RGB LED pins
         self.rgb_pins = {
-            'r': 16,  # Red channel
-            'g': 20,  # Green channel
-            'b': 21   # Blue channel
+            "r": 16,  # Red channel
+            "g": 20,  # Green channel
+            "b": 21,  # Blue channel
         }
         self.blink_thread = None
         self.should_blink = False
-        
+
         # Color combinations for states
         self.colors = {
-            'red': {'r': 1, 'g': 0, 'b': 0},      # Error/Stop
-            'green': {'r': 0, 'g': 1, 'b': 0},    # Success
-            'blue': {'r': 0, 'g': 0, 'b': 1},     # Processing
-            'purple': {'r': 1, 'g': 0, 'b': 1},   # Stalled
-            'cyan': {'r': 0, 'g': 1, 'b': 1},     # In-process
-            'white': {'r': 1, 'g': 1, 'b': 1}     # All on
+            "red": {"r": 1, "g": 0, "b": 0},  # Error/Stop
+            "green": {"r": 0, "g": 1, "b": 0},  # Success
+            "blue": {"r": 0, "g": 0, "b": 1},  # Processing
+            "purple": {"r": 1, "g": 0, "b": 1},  # Stalled
+            "cyan": {"r": 0, "g": 1, "b": 1},  # In-process
+            "white": {"r": 1, "g": 1, "b": 1},  # All on
         }
         self.setup_leds()
 
@@ -39,9 +40,9 @@ class ToolsHandler:
         for pin in self.rgb_pins.values():
             GPIO.setup(pin, GPIO.OUT)
             GPIO.output(pin, GPIO.LOW)
-            
+
     def set_color(self, color_name):
-        color = self.colors.get(color_name, {'r': 0, 'g': 0, 'b': 0})
+        color = self.colors.get(color_name, {"r": 0, "g": 0, "b": 0})
         for channel, value in color.items():
             GPIO.output(self.rgb_pins[channel], value)
 
@@ -52,7 +53,7 @@ class ToolsHandler:
             self.stop_blinking()
             self.set_color(color)
             sleep(duration)
-            self.set_color('off')
+            self.set_color("off")
 
     def start_blinking(self, color):
         self.stop_blinking()
@@ -66,39 +67,36 @@ class ToolsHandler:
         if self.blink_thread:
             self.blink_thread.join(timeout=1)
             self.blink_thread = None
-        self.set_color('off')
+        self.set_color("off")
 
     def _blink_led(self, color):
         while self.should_blink:
             self.set_color(color)
             sleep(0.5)
-            self.set_color('off')
+            self.set_color("off")
             sleep(0.5)
 
     def run_command(self, cmd, cwd=None):
         if self.current_process:
             self.stop_current_process()
-        
+
         if cwd is None:
             cwd = self.home
-        
+
         try:
             # Start cyan blinking for in-process
-            self.led_feedback('cyan', blink=True)
-            
+            self.led_feedback("cyan", blink=True)
+
             self.current_process = subprocess.Popen(
-                cmd,
-                shell=True,
-                cwd=cwd,
-                preexec_fn=os.setsid
+                cmd, shell=True, cwd=cwd, preexec_fn=os.setsid
             )
-            
+
             # Monitor process state in a separate thread
             threading.Thread(target=self._monitor_process, daemon=True).start()
-            
+
         except Exception as e:
             self.stop_blinking()
-            self.led_feedback('red', 1.0)
+            self.led_feedback("red", 1.0)
             print(f"Error running command: {e}")
 
     def _monitor_process(self):
@@ -113,7 +111,7 @@ class ToolsHandler:
                 # Check if process is still running
                 if self.current_process.poll() is not None:
                     self.stop_blinking()
-                    self.led_feedback('green', 1.0)
+                    self.led_feedback("green", 1.0)
                     break
 
                 # Get process CPU time
@@ -130,7 +128,7 @@ class ToolsHandler:
                 # If stalled for 5 checks (5 seconds), show solid purple
                 if stall_count >= 5:
                     self.stop_blinking()
-                    self.set_color('purple')
+                    self.set_color("purple")
 
                 sleep(1)
 
@@ -141,9 +139,9 @@ class ToolsHandler:
         if self.current_process:
             try:
                 self.stop_blinking()
-                self.set_color('off')
+                self.set_color("off")
                 os.killpg(os.getpgid(self.current_process.pid), signal.SIGTERM)
-                self.led_feedback('red', 0.5)
+                self.led_feedback("red", 0.5)
             except:
                 pass
             self.current_process = None
@@ -156,12 +154,12 @@ class ToolsHandler:
     # Button B: Run Current Python File
     def button_b_action(self):
         current_dir = os.getcwd()
-        python_files = [f for f in os.listdir(current_dir) if f.endswith('.py')]
+        python_files = [f for f in os.listdir(current_dir) if f.endswith(".py")]
         if python_files:
             cmd = f"python3 {python_files[0]}"
             self.run_command(cmd, current_dir)
         else:
-            self.led_feedback('red')
+            self.led_feedback("red")
             print("No Python files found in current directory")
 
     # Button X: Code Quality & Tests
@@ -186,5 +184,6 @@ class ToolsHandler:
     # Select: Stop Current Process
     def button_select_action(self):
         self.stop_current_process()
+
 
 tools_handler = ToolsHandler()

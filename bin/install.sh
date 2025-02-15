@@ -1,519 +1,392 @@
-
-
 #!/bin/bash
 set -e  # Exit on error
+
+# Color definitions
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+# Progress tracking
+TOTAL_STEPS=6
+CURRENT_STEP=1
+
+# Print colored message
+print_message() {
+    echo -e "${2}${1}${NC}"
+}
+
+# Print error message and exit
+print_error() {
+    print_message "\n❌ Error: $1" "$RED"
+    exit 1
+}
+
+# Print success message
+print_success() {
+    print_message "\n✓ $1" "$GREEN"
+}
+
+# Print warning message
+print_warning() {
+    print_message "\n⚠️  $1" "$YELLOW"
+}
+
+# Print step message
+print_step() {
+    print_message "\n📦 Step $1/$TOTAL_STEPS: $2" "$BLUE"
+}
+
+# Show progress
+show_progress() {
+    local width=50
+    local progress=$((CURRENT_STEP * width / TOTAL_STEPS))
+    printf "\n[%-${width}s] %d%%\n" "$(printf "%${progress}s" | tr ' ' '=')" $((CURRENT_STEP * 100 / TOTAL_STEPS))
+    ((CURRENT_STEP++))
+}
+
+# Check command exists
+check_command() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        print_error "Required command '$1' not found"
+    fi
+}
 
 # Test mode flag
 TEST_MODE=false
 if [[ "$1" == "--test" ]]; then
     TEST_MODE=true
-    echo "Running in test mode..."
+    print_warning "Running in test mode - skipping hardware checks"
     
     # Create pi user if in test mode
     if ! id -u pi > /dev/null 2>&1; then
-        sudo useradd -m -s /bin/bash pi
-        echo "Created pi user"
+        useradd -m -s /bin/bash pi
+        print_success "Created pi user"
     fi
 fi
 
-# Safety checks and backup function
-backup_config() {
-    local backup_dir="/home/pi/firmware_backup_$(date +%Y%m%d_%H%M%S)"
-    echo "Creating backup in $backup_dir"
-    if ! mkdir -p "$backup_dir"; then
-        echo "Error: Failed to create backup directory"
-        return 1
-    fi
+# System checks
+check_system() {
+    print_step "1" "Checking system requirements"
     
-    # Backup important system files
-    if [ -f /boot/config.txt ]; then
-        if ! cp /boot/config.txt "$backup_dir/"; then
-            echo "Error: Failed to backup config.txt"
-            return 1
+    if [ "$TEST_MODE" != "true" ]; then
+        # Check if running on Raspberry Pi
+        if [ ! -f /proc/cpuinfo ]; then
+            print_error "Cannot access /proc/cpuinfo"
         fi
-    fi
-    if [ -f /boot/cmdline.txt ]; then
-        if ! cp /boot/cmdline.txt "$backup_dir/"; then
-            echo "Error: Failed to backup cmdline.txt"
-            return 1
-        fi
-    fi
-    
-    echo "Backup completed. To restore, use: sudo cp $backup_dir/* /boot/"
-    return 0
-}
 
-# Check if script is run as root
-if [ "$EUID" -ne 0 ]; then
-    echo "Error: Please run as root (use sudo)"
-    exit 1
-fi
-
-# Check if running on a Raspberry Pi (skip in test mode)
-if [ "$TEST_MODE" != "true" ]; then
-    if [ ! -f /proc/cpuinfo ]; then
-        echo "Error: Cannot access /proc/cpuinfo"
-        exit 1
-    fi
-
-    if ! grep -q "Raspberry Pi" /proc/cpuinfo; then
-        echo "Error: This script must be run on a Raspberry Pi"
-        exit 1
-    fi
-fi
-
-# Check if firmware directory exists (create in test mode)
-if [ "$TEST_MODE" == "true" ]; then
-    mkdir -p /home/pi/firmware/bin
-    mkdir -p /home/pi/firmware/drivers/bin
-    mkdir -p /home/pi/firmware/cli/bin
-    mkdir -p /home/pi/firmware/assets/images
-    mkdir -p /home/pi/firmware/assets/config
-    
-    # Create test detect_model.sh
-    echo '#!/bin/bash
-echo "pi0-2w"' > /home/pi/firmware/bin/detect_model.sh
-    chmod +x /home/pi/firmware/bin/detect_model.sh
-    
-    # Create test requirements.txt
-    echo 'requests==2.31.0
-flask==3.0.0' > /home/pi/firmware/requirements.txt
-    
-    # Create test driver install script
-    echo '#!/bin/bash
-echo "Driver install test"' > /home/pi/firmware/drivers/bin/install.sh
-    chmod +x /home/pi/firmware/drivers/bin/install.sh
-    
-    # Create test CLI install script
-    echo '#!/bin/bash
-echo "CLI install test"' > /home/pi/firmware/cli/bin/install.sh
-    chmod +x /home/pi/firmware/cli/bin/install.sh
-else
-    if [ ! -d /home/pi/firmware ]; then
-        echo "Error: Firmware directory not found at /home/pi/firmware"
-        exit 1
-    fi
-fi
-
-# Make detect_model.sh executable
-if [ ! -f /home/pi/firmware/bin/detect_model.sh ]; then
-    echo "Error: detect_model.sh not found"
-    exit 1
-fi
-
-if ! chmod +x /home/pi/firmware/bin/detect_model.sh; then
-    echo "Error: Failed to make detect_model.sh executable"
-    exit 1
-fi
-
-# Detect Pi model
-PI_MODEL=$(/home/pi/firmware/bin/detect_model.sh)
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to detect Raspberry Pi model"
-    exit 1
-fi
-
-if [ "$PI_MODEL" = "unknown" ]; then
-    echo "Error: Unsupported Raspberry Pi model detected"
-    echo "This firmware only supports Pi Zero W and Pi Zero 2W"
-    exit 1
-fi
-
-echo "Detected Raspberry Pi model: $PI_MODEL"
-
-# Create backup before proceeding
-echo "Creating backup of current configuration..."
-backup_config
-
-# Confirm before proceeding (skip in test mode)
-echo ""
-echo "WARNING: This will install Hackpack v4 firmware for $PI_MODEL"
-echo "A backup of your current configuration has been created"
-if [ "$TEST_MODE" != "true" ]; then
-    read -p "Do you want to proceed? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Installation cancelled"
-        exit 1
-    fi
-else
-    echo "Test mode: Auto-confirming installation"
-fi
-
-# Install basic system dependencies
-echo ""
-echo "--------------------------------------------------"
-echo ""
-echo "(1 of 5) Installing system basics for $PI_MODEL..."
-echo ""
-echo "--------------------------------------------------"
-echo ""
-
-sudo mkdir -p /home/pi/hp_tmp
-
-#sudo touch /home/pi/hp_tmp/.hp_storage_
-#sudo chown -R pi:pi /home/pi/hp_tmp/.hp_storage_
-
-#sudo touch /home/pi/hp_tmp/.authtoken
-#sudo chown -R pi:pi /home/pi/hp_tmp/.authtoken
-
-# Update package lists and install required packages
-echo "Updating package lists..."
-if ! sudo apt-get update; then
-    echo "Error: Failed to update package lists"
-    exit 1
-fi
-
-echo "Installing system packages..."
-
-# Configure wireshark for non-superusers in test mode
-if [ "$TEST_MODE" == "true" ]; then
-    echo 'wireshark-common wireshark-common/install-setuid boolean true' | sudo debconf-set-selections
-fi
-
-if ! sudo apt-get install --no-install-recommends -y \
-    git \
-    python3-pip \
-    python3-setuptools \
-    python3-venv \
-    python3-dev \
-    build-essential \
-    libssl-dev \
-    libffi-dev \
-    nmap \
-    wireshark \
-    tcpdump \
-    sqlite3 \
-    nginx \
-    screen \
-    tmux \
-    cmake \
-    pkg-config \
-    rustc \
-    cargo; then
-    echo "Error: Failed to install system packages"
-    exit 1
-fi
-
-# Upgrade pip to latest version
-echo "Upgrading pip..."
-if ! sudo pip3 install --upgrade pip; then
-    echo "Warning: Failed to upgrade pip"
-fi
-
-# Add user to wireshark group in test mode
-if [ "$TEST_MODE" == "true" ]; then
-    # Create wireshark group if it doesn't exist
-    if ! getent group wireshark > /dev/null; then
-        sudo groupadd wireshark
-        echo "Created wireshark group"
-    fi
-    sudo usermod -a -G wireshark pi
-    echo "Added pi user to wireshark group"
-fi
-
-# Try to install netcat
-echo "Installing netcat..."
-if ! sudo apt-get install -y netcat-traditional; then
-    echo "Trying alternative netcat package..."
-    if ! sudo apt-get install -y netcat-openbsd; then
-        echo "Warning: Could not install netcat. Continuing anyway..."
-    fi
-fi
-
-# Install Python security and development packages
-echo "Installing Python packages..."
-
-# Create a temporary requirements file
-cat > /tmp/requirements.txt << 'EOL'
-requests==2.31.0
-flask==2.3.3
-fastapi==0.95.2
-uvicorn==0.22.0
-sqlalchemy==2.0.19
-python-dotenv==1.0.0
-scapy==2.5.0
-pytest==7.4.0
-black==23.7.0
-pylint==2.17.5
-jupyter==1.0.0
-EOL
-
-# Create a second requirements file for packages that need special handling
-cat > /tmp/requirements_extra.txt << 'EOL'
-cryptography==39.0.2
-bcrypt==4.0.1
-pwntools==4.9.0
-EOL
-
-# Function to install Python packages
-install_python_packages() {
-    local req_file=$1
-    local ignore_installed=$2
-    
-    # Build pip command
-    local pip_cmd="sudo pip3 install --no-cache-dir"
-    
-    # Add --ignore-installed if requested
-    if [ "$ignore_installed" = "true" ]; then
-        pip_cmd="$pip_cmd --ignore-installed"
-    fi
-    
-    # Add --break-system-packages for pip 23+
-    if pip3 --version | grep -q "pip 23"; then
-        echo "Using pip 23+ with --break-system-packages"
-        pip_cmd="$pip_cmd --break-system-packages"
+        # Check Pi model
+        local model=$(cat /proc/cpuinfo | grep Model | cut -d ':' -f 2 | tr -d ' ')
+        case "$model" in
+            *"ZeroW"*|*"Zero2W"*)
+                print_success "Compatible Pi model detected: $model"
+                ;;
+            *)
+                print_error "This firmware only supports Pi Zero W and Zero 2W (detected: $model)"
+                ;;
+        esac
     else
-        echo "Using standard pip install"
+        print_success "Test mode - skipping Pi model check"
     fi
     
-    # Run pip install
-    $pip_cmd -r "$req_file"
-    return $?
+    # Check root
+    if [ "$EUID" -ne 0 ]; then
+        print_error "Please run as root (use sudo)"
+    fi
+    
+    # Check required commands
+    local required_commands=("python3" "pip3" "git" "systemctl")
+    for cmd in "${required_commands[@]}"; do
+        check_command "$cmd"
+    done
+
+    # Check Python version
+    local python_version=$(python3 -c 'import sys; print("{}.{}".format(sys.version_info.major, sys.version_info.minor))')
+    if [ "$(echo "$python_version >= 3.7" | bc)" -eq 0 ]; then
+        print_error "Python 3.7 or higher required (found: $python_version)"
+    fi
+
+    # Check available disk space
+    local required_space=500000  # 500MB in KB
+    local available_space=$(df -k /home/pi | awk 'NR==2 {print $4}')
+    if [ "$available_space" -lt "$required_space" ]; then
+        print_error "Insufficient disk space. Required: 500MB, Available: $((available_space/1024))MB"
+    fi
+
+    print_success "System requirements met"
+    show_progress
 }
 
-# First try without --ignore-installed
-echo "Installing main Python packages..."
-if ! install_python_packages /tmp/requirements.txt false; then
-    echo "Retrying with --ignore-installed..."
-    if ! install_python_packages /tmp/requirements.txt true; then
-        echo "Error: Failed to install main Python packages"
-        rm /tmp/requirements.txt /tmp/requirements_extra.txt
-        exit 1
+# Backup function
+backup_config() {
+    print_step "2" "Backing up system configuration"
+    
+    local timestamp=$(date +%Y%m%d_%H%M%S)
+    local backup_dir="/home/pi/firmware_backup_${timestamp}"
+    
+    # Ensure /home/pi exists
+    if [ ! -d "/home/pi" ]; then
+        print_warning "Creating /home/pi directory..."
+        if ! mkdir -p "/home/pi"; then
+            print_error "Failed to create /home/pi directory"
+        fi
+        chown pi:pi "/home/pi"
     fi
-fi
-
-# Install extra packages
-echo "Installing extra Python packages..."
-if ! install_python_packages /tmp/requirements_extra.txt true; then
-    echo "Warning: Some extra Python packages failed to install"
-fi
-
-# Clean up
-rm /tmp/requirements.txt
-
-# Run Driver install script
-
-echo ""
-echo "--------------------------------------------------"
-echo ""
-echo "(2 of 5) Starting Hackpack Driver install..."
-echo ""
-echo "--------------------------------------------------"
-echo ""
-
-sudo bash /home/pi/firmware/drivers/bin/install.sh
-
-# Run CLI install script
-
-echo ""
-echo "--------------------------------------------------"
-echo ""
-echo "(3 of 5) Starting Hackpack CLI install..."
-echo ""
-echo "--------------------------------------------------"
-echo ""
-
-sudo bash /home/pi/firmware/cli/bin/install.sh
-
-# Run Kiosk install
-
-echo ""
-echo "--------------------------------------------------"
-echo ""
-echo "(4 of 5) Setting up development environment..."
-echo ""
-echo "--------------------------------------------------"
-echo ""
-
-# Create Python virtual environment
-echo "Creating Python virtual environment..."
-if [ -d /home/pi/venv ]; then
-    echo "Removing existing virtual environment..."
-    rm -rf /home/pi/venv
-fi
-if ! python3 -m venv /home/pi/venv; then
-    echo "Error: Failed to create virtual environment"
-    exit 1
-fi
-
-# Add venv activation to bashrc if not already present
-if ! grep -q "source /home/pi/venv/bin/activate" /home/pi/.bashrc; then
-    if ! echo 'source /home/pi/venv/bin/activate' >> /home/pi/.bashrc; then
-        echo "Error: Failed to update .bashrc"
-        exit 1
+    
+    print_message "Creating backup in $backup_dir" "$YELLOW"
+    
+    if ! mkdir -p "$backup_dir"; then
+        print_warning "Attempting backup in /tmp..."
+        backup_dir="/tmp/firmware_backup_${timestamp}"
+        if ! mkdir -p "$backup_dir"; then
+            print_error "Could not create backup directory"
+        fi
     fi
-fi
+    
+    # Backup system files
+    for file in config.txt cmdline.txt; do
+        if [ -f "/boot/$file" ]; then
+            if ! cp "/boot/$file" "$backup_dir/"; then
+                print_error "Failed to backup $file"
+            fi
+            print_success "$file backed up"
+        else
+            print_warning "$file not found in /boot"
+        fi
+    done
+    
+    # Set permissions
+    chown -R pi:pi "$backup_dir"
+    chmod -R 644 "$backup_dir"/*
+    
+    print_success "Backup completed in $backup_dir"
+    print_message "To restore: sudo cp $backup_dir/* /boot/" "$YELLOW"
+    show_progress
+}
 
-# Set up development directories
-echo "Creating project directories..."
-for dir in "/home/pi/projects" "/home/pi/projects/payloads" "/home/pi/projects/api"; do
-    if ! mkdir -p "$dir"; then
-        echo "Error: Failed to create directory $dir"
-        exit 1
+# Install dependencies
+install_dependencies() {
+    print_step "3" "Installing system dependencies"
+    
+    # Update package list
+    print_message "Updating package list..." "$YELLOW"
+    if ! apt-get update; then
+        print_error "Failed to update package list"
     fi
-done
+    
+    # Install required packages
+    local packages=(
+        "python3-pip"
+        "python3-venv"
+        "python3-dev"
+        "git"
+        "build-essential"
+        "libffi-dev"
+        "libssl-dev"
+        "netcat-openbsd"
+        "bc"
+        "raspi-config"
+    )
+    
+    for package in "${packages[@]}"; do
+        print_message "Installing $package..." "$YELLOW"
+        if ! apt-get install -y "$package"; then
+            print_warning "Failed to install $package"
+        fi
+    done
+    
+    # Enable SPI interface
+    print_message "Enabling SPI interface..." "$YELLOW"
+    raspi-config nonint do_spi 0
+    
+    # Add pi user to gpio group
+    usermod -a -G gpio pi
+    
+    print_success "Dependencies installed"
+    show_progress
+}
 
-echo ""
-echo "--------------------------------------------------"
-echo ""
-echo "(5 of 5) Installing Python development packages..."
-echo ""
-echo "--------------------------------------------------"
-echo ""
-
-# Activate virtual environment and install packages
-if [ ! -f /home/pi/venv/bin/activate ]; then
-    echo "Error: Virtual environment activation script not found"
-    exit 1
-fi
-
-# We need to source in a subshell to avoid affecting the main script
-echo "Installing Python packages..."
-if ! (source /home/pi/venv/bin/activate && pip install -r /home/pi/firmware/requirements.txt); then
-    echo "Error: Failed to install Python packages"
-    exit 1
-fi
-
-# Create helpful scripts
-cat > /home/pi/projects/scan_network.py << 'EOL'
-#!/usr/bin/env python3
-from scapy.all import ARP, Ether, srp
-import sys
-
-def scan(ip_range):
-    arp = ARP(pdst=ip_range)
-    ether = Ether(dst="ff:ff:ff:ff:ff:ff")
-    packet = ether/arp
-    result = srp(packet, timeout=3, verbose=0)[0]
-    devices = []
-    for sent, received in result:
-        devices.append({'ip': received.psrc, 'mac': received.hwsrc})
-    return devices
-
-if __name__ == "__main__":
-    ip_range = sys.argv[1] if len(sys.argv) > 1 else "192.168.1.0/24"
-    print(f"Scanning network {ip_range}...")
-    devices = scan(ip_range)
-    print("\nDevices found:")
-    print("IP" + " "*18 + "MAC")
-    print("-" * 40)
-    for device in devices:
-        print(f"{device['ip']:20} {device['mac']}")
-EOL
-
-if ! chmod +x /home/pi/projects/scan_network.py; then
-    echo "Warning: Failed to make scan_network.py executable"
-fi
-
-# Create example API server
-cat > /home/pi/projects/api/example_server.py << 'EOL'
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import uvicorn
-
-class Device(BaseModel):
-    name: str
-    ip: str
-    mac: str
-
-app = FastAPI(title="IoT Security API")
-
-@app.get("/")
-async def read_root():
-    return {"message": "Welcome to IoT Security API"}
-
-@app.get("/devices")
-async def get_devices():
-    return {"devices": []}
-
-@app.post("/devices")
-async def add_device(device: Device):
-    return device
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-EOL
-
-if ! chmod +x /home/pi/projects/api/example_server.py; then
-    echo "Warning: Failed to make example_server.py executable"
-fi
-
-# Create README with instructions
-cat > /home/pi/projects/README.md << 'EOL'
-# IoT Security and Development Environment
-
-## Available Tools
-- Network scanning: nmap, wireshark, tcpdump
-- Security: pwntools, scapy, cryptography
-- API Development: flask, fastapi, uvicorn
-- Database: sqlite3, sqlalchemy
-- Code Quality: black, pylint, pytest
-
-## Quick Start
-1. Network scan: `sudo python3 scan_network.py`
-2. Start API server: `cd api && python3 example_server.py`
-3. Run tests: `pytest`
-4. Format code: `black .`
-
-## Virtual Environment
-Activated automatically on login, or manually:
-`source ~/venv/bin/activate`
-
-## Project Structure
-- ~/projects/iot/: IoT-related projects
-- ~/projects/api/: API servers and clients
-- ~/projects/security/: Security tools and scripts
-EOL
-
-echo ""
-echo "--------------------------------------------------"
-echo ""
-echo "(5 of 5) Final steps and aesthetics"
-echo ""
-echo "--------------------------------------------------"
-echo ""
-# Set proper ownership and permissions
-echo "Setting proper ownership and permissions..."
-if ! sudo chown -R pi:pi /home/pi/; then
-    echo "Warning: Failed to set ownership of /home/pi"
-fi
-
-if ! chmod -R 755 /home/pi/firmware/bin/; then
-    echo "Warning: Failed to set permissions on firmware binaries"
-fi
-
-# Set wallpaper & aesthetics
-if [ -f /home/pi/firmware/assets/images/wallpaper.png ]; then
-    echo "Setting wallpaper..."
-    if ! pcmanfm --set-wallpaper /home/pi/firmware/assets/images/wallpaper.png; then
-        echo "Warning: Failed to set wallpaper"
+# Setup Python environment
+setup_python() {
+    print_step "4" "Setting up Python environment"
+    
+    # Create virtual environment
+    print_message "Creating virtual environment..." "$YELLOW"
+    if [ -d "/home/pi/firmware/venv" ]; then
+        print_warning "Removing existing virtual environment..."
+        rm -rf "/home/pi/firmware/venv"
     fi
-fi
-
-if [ -d /home/pi/firmware/assets/config ]; then
-    echo "Copying config files..."
-    if ! sudo cp -r /home/pi/firmware/assets/config /home/pi/.config; then
-        echo "Warning: Failed to copy config files"
+    
+    if ! python3 -m venv "/home/pi/firmware/venv"; then
+        print_error "Failed to create virtual environment"
     fi
-fi
+    
+    # Activate virtual environment
+    source "/home/pi/firmware/venv/bin/activate"
+    
+    # Upgrade pip
+    print_message "Upgrading pip..." "$YELLOW"
+    if ! pip install --upgrade pip; then
+        print_warning "Failed to upgrade pip"
+    fi
+    
+    # Install requirements one by one
+    print_message "Installing Python packages..." "$YELLOW"
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Skip comments and empty lines
+        if [[ $line =~ ^#.*$ ]] || [[ -z $line ]]; then
+            continue
+        fi
+        
+        # Extract package name and version
+        package=$(echo "$line" | cut -d'=' -f1)
+        print_message "Installing $package..." "$YELLOW"
+        
+        if ! pip install "$line" --no-deps; then
+            print_warning "Failed to install $package, trying with --ignore-installed"
+            if ! pip install "$line" --no-deps --ignore-installed; then
+                print_warning "Could not install $package, continuing anyway"
+            fi
+        fi
+    done < requirements.txt
+    
+    print_message "Installing dependencies..." "$YELLOW"
+    pip install --upgrade pip setuptools wheel
+    
+    print_success "Python environment ready"
+    show_progress
+}
 
-# Cleanup
-echo "Cleaning up unnecessary packages..."
-if ! sudo apt-get purge -y libreoffice wolfram-engine sonic-pi scratch; then
-    echo "Warning: Failed to remove some packages"
-fi
+# Install firmware
+install_firmware() {
+    print_step "5" "Installing firmware files"
+    
+    local firmware_dir="/home/pi/firmware"
+    
+    # Backup existing firmware if present
+    if [ -d "$firmware_dir" ]; then
+        local backup_name="firmware_backup_$(date +%Y%m%d_%H%M%S)"
+        print_warning "Existing firmware found, backing up to $backup_name"
+        mv "$firmware_dir" "/home/pi/$backup_name"
+    fi
+    
+    # Create fresh firmware directory
+    mkdir -p "$firmware_dir"
+    
+    # Copy firmware files, excluding development files
+    print_message "Copying firmware files..." "$YELLOW"
+    rsync -av \
+        --exclude 'tests/' \
+        --exclude 'mock_hardware/' \
+        --exclude '.git*' \
+        --exclude 'venv/' \
+        --exclude '.pytest_cache/' \
+        --exclude '__pycache__/' \
+        --exclude '*.pyc' \
+        --exclude 'requirements.dev.txt' \
+        --exclude '.coverage' \
+        --exclude 'htmlcov/' \
+        --exclude '.tox/' \
+        . "$firmware_dir/"
+    
+    # Set correct permissions
+    chown -R pi:pi "$firmware_dir"
+    chmod -R 755 "$firmware_dir/bin"
+    chmod +x "$firmware_dir/bin/"*.sh
+    
+    print_success "Firmware files installed"
+    show_progress
+}
 
-if ! sudo apt-get -y autoremove; then
-    echo "Warning: Failed to autoremove packages"
-fi
+# Setup services
+setup_services() {
+    print_step "6" "Setting up system services"
+    
+    # Install service files
+    cp bin/system/hackpack-input.service /etc/systemd/system/
+    cp bin/system/hackpack-leds.service /etc/systemd/system/
+    
+    # Reload systemd
+    systemctl daemon-reload
+    
+    # Enable services
+    systemctl enable hackpack-input.service
+    systemctl enable hackpack-leds.service
+    
+    # Start services
+    systemctl start hackpack-input.service
+    systemctl start hackpack-leds.service
+    
+    print_success "Services installed and started"
+    show_progress
+}
 
-echo ""
-echo "--------------------------------------------------"
-echo ""
-echo "Finished installing Hackpack v4. Rebooting..."
-echo ""
-echo "--------------------------------------------------"
-echo ""
+# Verify installation
+verify_installation() {
+    print_step "7" "Verifying installation"
+    
+    # Check Python environment
+    print_message "Checking Python environment..." "$YELLOW"
+    source "/home/pi/firmware/venv/bin/activate"
+    if ! python3 -c "import RPi.GPIO; import spidev; import fastapi; import rich"; then
+        print_error "Required Python packages not properly installed"
+    fi
+    
+    # Check services
+    print_message "Checking system services..." "$YELLOW"
+    for service in hackpack-input hackpack-leds; do
+        if ! systemctl is-active --quiet "$service"; then
+            print_error "Service $service is not running"
+        fi
+        print_success "Service $service is running"
+    done
+    
+    # Check hardware interfaces
+    print_message "Checking hardware interfaces..." "$YELLOW"
+    if ! raspi-config nonint get_spi | grep -q "0"; then
+        print_error "SPI interface not enabled"
+    fi
+    
+    # Check GPIO permissions
+    if ! groups pi | grep -q "gpio"; then
+        print_error "User 'pi' not in gpio group"
+    fi
+    
+    # Check LED functionality
+    print_message "Testing LED system..." "$YELLOW"
+    if ! timeout 5s python3 -c 'from drivers.leds.light_client import LightClient; client=LightClient(); client.set_color(255,255,255); import time; time.sleep(1); client.set_color(0,0,0)' 2>/dev/null; then
+        print_warning "LED test failed - please check LED connections"
+    fi
+    
+    print_success "Installation verified"
+    show_progress
+}
 
-sudo shutdown -r now
+# Main installation
+main() {
+    print_message "\n🌈 HackPack v4 Firmware Installer" "$BOLD"
+    print_message "This script will install the HackPack v4 firmware for Raspberry Pi Zero W/2W\n" "$YELLOW"
+    
+    # Perform installation steps
+    check_system
+    backup_config
+    install_dependencies
+    setup_python
+    install_firmware
+    setup_services
+    verify_installation
+    
+    print_success "🎉 Installation completed successfully!"
+    
+    # Final instructions
+    print_message "\nImportant Next Steps:" "$BLUE"
+    print_message "1. Reboot your Pi:   sudo reboot" "$YELLOW"
+    print_message "2. Watch LED pattern at startup" "$YELLOW"
+    print_message "3. Press A button to launch IPython shell" "$YELLOW"
+    print_message "4. Visit https://github.com/yourusername/hackpack-v4-firmware for documentation" "$YELLOW"
+}
+
+# Run main installation
+main "$@"

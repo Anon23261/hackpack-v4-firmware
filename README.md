@@ -21,6 +21,29 @@
 
 Hackpack v4 is your comprehensive Python development platform! Built for the Raspberry Pi Zero W and Zero 2W, it transforms your device into a powerful portable Python workstation with integrated development tools, visual feedback, and USB payload capabilities.
 
+## 💾 Installation
+
+1. **Clone the Firmware**
+   ```bash
+   cd ~
+   git clone https://github.com/yourusername/hackpack-v4-firmware.git
+   cd hackpack-v4-firmware
+   ```
+
+2. **Run Install Script**
+   ```bash
+   sudo ./bin/install.sh
+   ```
+   The LED will pulse blue during installation.
+   When installation completes:
+   - 🟢 Green flash = Success
+   - 🔴 Red flash = Error
+
+3. **First Boot**
+   - Reboot your Pi: `sudo reboot`
+   - LED will show startup pattern
+   - Press A button to test (opens IPython)
+
 ## 🎯 Feature Highlights
 
 ### 🐍 Python Power Tools

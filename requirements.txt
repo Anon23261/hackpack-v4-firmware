@@ -1,45 +1,31 @@
-# Development Tools
-ipython>=8.12.0
-jupyter>=1.0.0
-black>=23.3.0
-pylint>=2.17.3
-pytest>=7.3.1
-pytest-cov>=4.1.0
-mypy>=1.3.0
-rope>=1.8.0
-isort>=5.12.0
+# Core Dependencies
+RPi.GPIO==0.7.1
+pyusb==1.2.1
+pyserial==3.5
+spidev==3.5
 
-# Web Development
-fastapi>=0.95.2
-uvicorn>=0.22.0
-requests>=2.31.0
-aiohttp>=3.8.4
-websockets>=11.0.3
+# Web and API
+fastapi==0.95.2
+uvicorn==0.22.0
+requests==2.31.0
+websockets==11.0.3
 
 # Data Processing
-numpy>=1.24.3
-pandas>=2.0.2
-matplotlib>=3.7.1
+numpy==1.24.3
+pandas==2.0.2
+matplotlib==3.7.1
 
-# IoT & Hardware
-RPi.GPIO>=0.7.1
-pyusb>=1.2.1
-pyserial>=3.5
-duckyscript>=0.1
-scapy>=2.5.0
-pwntools>=4.9.0
+# Hardware Interface
+python-uinput==0.11.2
 
-# Security & Cryptography
-cryptography>=40.0.2
-paramiko>=3.1.0
-python-nmap>=0.7.1
-
-# Database
-sqlalchemy>=2.0.15
-alembic>=1.11.1
+# Security
+cryptography==40.0.2
+paramiko==3.1.0
 
 # Utilities
-python-dotenv>=1.0.0
-rich>=13.3.5
-tqdm>=4.65.0
-PyYAML>=6.0
+python-dotenv==1.0.0
+rich==13.3.5
+PyYAML==6.0
+
+# Note: These versions are tested and confirmed working on Pi Zero W/2W
+# Do not update versions without thorough testing

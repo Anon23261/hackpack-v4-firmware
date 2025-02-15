@@ -1,4 +1,44 @@
+# System files
 .DS_Store
-node_modules/
+
+# Python
 *.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+
+# Development and testing
+tests/
+mock_hardware/
+requirements.dev.txt
+.pytest_cache/
+
+# Node.js
+node_modules/
 npm-debug.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Distribution
+dist/
+build/
+*.egg-info/

@@ -48,17 +48,19 @@ ARROW_THRESHOLD_Y_HIGH = 742
 JOYSTICK_MOVEMENT_X = [8, 5, 2, 1]
 JOYSTICK_MOVEMENT_Y = [11, 5, 3, 2]
 
-if len(JOYSTICK_THRESHOLDS_X) % 2 != 0 or \
-        len(JOYSTICK_THRESHOLDS_Y) % 2 != 0 or \
-        len(JOYSTICK_THRESHOLDS_X) / 2 != len(JOYSTICK_MOVEMENT_X) or \
-        len(JOYSTICK_THRESHOLDS_Y) / 2 != len(JOYSTICK_MOVEMENT_Y):
+if (
+    len(JOYSTICK_THRESHOLDS_X) % 2 != 0
+    or len(JOYSTICK_THRESHOLDS_Y) % 2 != 0
+    or len(JOYSTICK_THRESHOLDS_X) / 2 != len(JOYSTICK_MOVEMENT_X)
+    or len(JOYSTICK_THRESHOLDS_Y) / 2 != len(JOYSTICK_MOVEMENT_Y)
+):
     print("Fix thresholds!")
     exit(0)
 
 # Button and debouncing behavior
 SHUTDOWN_HOLD_SECONDS = 3
 POLLS_A_SECOND = 60
-BUTTON_BOUNCE_SECONDS = .02
+BUTTON_BOUNCE_SECONDS = 0.02
 
 #  DON'T CHANGE BELOW HERE WITHOUT ASKING PAUL!      #
 ######################################################
@@ -82,8 +84,9 @@ LEFTRIGHT_INVERTED = False
 try:
     TOUCH_CONF = commands.getstatusoutput("cat /home/pi/.ili9341_touch.conf")
     print(TOUCH_CONF)
-    XY_REVERSED, UPDOWN_INVERTED, LEFTRIGHT_INVERTED = \
-        map(lambda x: bool(int(x)), list(TOUCH_CONF[1]))
+    XY_REVERSED, UPDOWN_INVERTED, LEFTRIGHT_INVERTED = map(
+        lambda x: bool(int(x)), list(TOUCH_CONF[1])
+    )
     print(XY_REVERSED, UPDOWN_INVERTED, LEFTRIGHT_INVERTED)
 except:
     pass
@@ -101,7 +104,7 @@ LAST_X_POS, LAST_Y_POS = 0, 0
 # To verify
 try:
     RES = commands.getstatusoutput("cat /sys/class/graphics/fb0/virtual_size")
-    XRES, YRES = map(float, RES[1].split(','))
+    XRES, YRES = map(float, RES[1].split(","))
     print(XRES, YRES)
 except:
     pass
@@ -197,6 +200,7 @@ class ADC:
         """Magic function if you use 'with'."""
         self.close_spi()
 
+
 ch0 = ADC(bus=1, channel=0, device=1)
 ch1 = ADC(bus=1, channel=1, device=1)
 ch7 = ADC(bus=1, channel=7, device=1)
@@ -214,7 +218,7 @@ def handle_signal(sig, frame):
     virtual_mouse.__exit__()
     virtual_touchscreen.__exit__()
     virtual_keyboard.__exit__()
-    print ("Input driver killed. Restart to handle HackPack.")
+    print("Input driver killed. Restart to handle HackPack.")
     sys.exit(-sig)
 
 
@@ -333,35 +337,41 @@ def main():
     GPIO.setwarnings(False)
 
     # Mouse/Joystick
-    virtual_mouse = uinput.Device((
-        uinput.REL_X,
-        uinput.REL_Y,
-        uinput.BTN_LEFT,
-        uinput.BTN_RIGHT,
-    ))
+    virtual_mouse = uinput.Device(
+        (
+            uinput.REL_X,
+            uinput.REL_Y,
+            uinput.BTN_LEFT,
+            uinput.BTN_RIGHT,
+        )
+    )
 
     # Touchscreen
-    virtual_touchscreen = uinput.Device((
-        uinput.BTN_TOUCH,
-        uinput.ABS_MT_PRESSURE + (0, 255, 0, 0),
-        uinput.ABS_X + (TOUCH_VOLTAGE_X[0], TOUCH_VOLTAGE_X[1], 0, 0),
-        uinput.ABS_Y + (TOUCH_VOLTAGE_Y[0], TOUCH_VOLTAGE_Y[1], 0, 0),
-    ))
+    virtual_touchscreen = uinput.Device(
+        (
+            uinput.BTN_TOUCH,
+            uinput.ABS_MT_PRESSURE + (0, 255, 0, 0),
+            uinput.ABS_X + (TOUCH_VOLTAGE_X[0], TOUCH_VOLTAGE_X[1], 0, 0),
+            uinput.ABS_Y + (TOUCH_VOLTAGE_Y[0], TOUCH_VOLTAGE_Y[1], 0, 0),
+        )
+    )
 
     # Keyboard
-    virtual_keyboard = uinput.Device((
-        uinput.KEY_X,
-        uinput.KEY_Y,
-        uinput.KEY_A,
-        uinput.KEY_B,
-        uinput.KEY_ESC,
-        uinput.KEY_UP,
-        uinput.KEY_DOWN,
-        uinput.KEY_LEFT,
-        uinput.KEY_RIGHT,
-        uinput.KEY_SPACE,
-        uinput.KEY_ENTER,
-    ))
+    virtual_keyboard = uinput.Device(
+        (
+            uinput.KEY_X,
+            uinput.KEY_Y,
+            uinput.KEY_A,
+            uinput.KEY_B,
+            uinput.KEY_ESC,
+            uinput.KEY_UP,
+            uinput.KEY_DOWN,
+            uinput.KEY_LEFT,
+            uinput.KEY_RIGHT,
+            uinput.KEY_SPACE,
+            uinput.KEY_ENTER,
+        )
+    )
 
     # Joystick
     ch0.open()
@@ -398,11 +408,11 @@ def main():
         os.remove(SOCKET_PATH)
 
     SOCK.bind(SOCKET_PATH)
-    os.chmod(SOCKET_PATH, 0777)
+    os.chmod(SOCKET_PATH, 0o777)
     fcntl.fcntl(SOCK, fcntl.F_SETFL, os.O_NONBLOCK)
 
     # Big loop incoming.
-    while(1):
+    while 1:
         # Check the socket for one byte, throws error if none
         try:
             sock_recv = SOCK.recv(1)
@@ -418,19 +428,19 @@ def main():
         # Shutdown Button Check (Doubles as Escape)
         # (This one is a pull-down, invert logic)
         if not GPIO.input(POWER_BUTTON):
-            if (ButtonState.escape_counter == DEBOUNCE_POLLS_MIN):
+            if ButtonState.escape_counter == DEBOUNCE_POLLS_MIN:
                 if DEBUG:
                     print("Pressed Escape (Power) Button.")
                 virtual_keyboard.emit(uinput.KEY_ESC, 1)
                 ButtonState.escape_counter += 1
-            elif (ButtonState.escape_counter < DEBOUNCE_POLLS_MIN):
+            elif ButtonState.escape_counter < DEBOUNCE_POLLS_MIN:
                 ButtonState.escape_counter += 1
             ButtonState.shutdown_counter += 1
             if ButtonState.shutdown_counter >= SHUTDOWN_MAX:
                 os.system("wall HackPack v4 is Leaving the Building.")
                 os.system("sudo shutdown -h 0")
         else:
-            if (ButtonState.escape_counter >= DEBOUNCE_POLLS_MIN):
+            if ButtonState.escape_counter >= DEBOUNCE_POLLS_MIN:
                 virtual_keyboard.emit(uinput.KEY_ESC, 0)
                 if DEBUG:
                     print("Released Escape (Power) Button.")
@@ -438,21 +448,20 @@ def main():
             ButtonState.shutdown_counter = 0
 
         # Poll Buttons for Clicks
-        if (BUTTONS_ON):
-
+        if BUTTONS_ON:
             if ButtonState.JOYSTICK_MODE:
                 # Start Button/Left Mouse
                 if GPIO.input(START_BUTTON):
-                    if (ButtonState.start_counter == DEBOUNCE_POLLS_MIN):
+                    if ButtonState.start_counter == DEBOUNCE_POLLS_MIN:
                         if DEBUG:
                             print("Pressed L Mouse (Start) Button.")
                         virtual_mouse.emit(uinput.BTN_LEFT, 1)
                         ButtonState.start_pressed = True
                         ButtonState.start_counter += 1
-                    elif (ButtonState.start_counter < DEBOUNCE_POLLS_MIN):
+                    elif ButtonState.start_counter < DEBOUNCE_POLLS_MIN:
                         ButtonState.start_counter += 1
                 else:
-                    if (ButtonState.start_counter >= DEBOUNCE_POLLS_MIN):
+                    if ButtonState.start_counter >= DEBOUNCE_POLLS_MIN:
                         virtual_mouse.emit(uinput.BTN_LEFT, 0)
                         ButtonState.start_pressed = False
                         if DEBUG:
@@ -461,16 +470,16 @@ def main():
 
                 # Select Button/Right Mouse
                 if GPIO.input(SELECT_BUTTON):
-                    if (ButtonState.select_counter == DEBOUNCE_POLLS_MIN):
+                    if ButtonState.select_counter == DEBOUNCE_POLLS_MIN:
                         if DEBUG:
                             print("Pressed R Mouse (Select) Button.")
                         virtual_mouse.emit(uinput.BTN_RIGHT, 1)
                         ButtonState.select_pressed = True
                         ButtonState.select_counter += 1
-                    elif (ButtonState.select_counter < DEBOUNCE_POLLS_MIN):
+                    elif ButtonState.select_counter < DEBOUNCE_POLLS_MIN:
                         ButtonState.select_counter += 1
                 else:
-                    if (ButtonState.select_counter >= DEBOUNCE_POLLS_MIN):
+                    if ButtonState.select_counter >= DEBOUNCE_POLLS_MIN:
                         virtual_mouse.emit(uinput.BTN_RIGHT, 0)
                         ButtonState.select_pressed = False
                         if DEBUG:
@@ -479,16 +488,16 @@ def main():
             else:
                 # Select Button - Stop Current Process
                 if GPIO.input(SELECT_BUTTON):
-                    if (ButtonState.space_counter == DEBOUNCE_POLLS_MIN):
+                    if ButtonState.space_counter == DEBOUNCE_POLLS_MIN:
                         if DEBUG:
                             print("Pressed Select Button - Stop Process")
                         tools_handler.button_select_action()
                         ButtonState.space_pressed = True
                         ButtonState.space_counter += 1
-                    elif (ButtonState.space_counter < DEBOUNCE_POLLS_MIN):
+                    elif ButtonState.space_counter < DEBOUNCE_POLLS_MIN:
                         ButtonState.space_counter += 1
                 else:
-                    if (ButtonState.space_counter >= DEBOUNCE_POLLS_MIN):
+                    if ButtonState.space_counter >= DEBOUNCE_POLLS_MIN:
                         ButtonState.space_pressed = False
                         if DEBUG:
                             print("Released Select Button")
@@ -496,16 +505,16 @@ def main():
 
                 # Start Button - Wireshark
                 if GPIO.input(START_BUTTON):
-                    if (ButtonState.enter_counter == DEBOUNCE_POLLS_MIN):
+                    if ButtonState.enter_counter == DEBOUNCE_POLLS_MIN:
                         if DEBUG:
                             print("Pressed Start Button - Launch Wireshark")
                         tools_handler.button_start_action()
                         ButtonState.enter_pressed = True
                         ButtonState.enter_counter += 1
-                    elif (ButtonState.enter_counter < DEBOUNCE_POLLS_MIN):
+                    elif ButtonState.enter_counter < DEBOUNCE_POLLS_MIN:
                         ButtonState.enter_counter += 1
                 else:
-                    if (ButtonState.enter_counter >= DEBOUNCE_POLLS_MIN):
+                    if ButtonState.enter_counter >= DEBOUNCE_POLLS_MIN:
                         ButtonState.enter_pressed = False
                         if DEBUG:
                             print("Released Start Button")
@@ -513,69 +522,73 @@ def main():
 
             # A Button - Network Scanner
             if GPIO.input(A_BUTTON):
-                if (ButtonState.a_counter == DEBOUNCE_POLLS_MIN):
+                if ButtonState.a_counter == DEBOUNCE_POLLS_MIN:
                     if DEBUG:
                         print("Pressed A Button - Network Scanner")
                     tools_handler.button_a_action()
                     ButtonState.a_counter += 1
-                elif (ButtonState.a_counter < DEBOUNCE_POLLS_MIN):
+                elif ButtonState.a_counter < DEBOUNCE_POLLS_MIN:
                     ButtonState.a_counter += 1
             else:
-                if (ButtonState.a_counter >= DEBOUNCE_POLLS_MIN):
+                if ButtonState.a_counter >= DEBOUNCE_POLLS_MIN:
                     if DEBUG:
                         print("Released A Button")
                 ButtonState.a_counter = 0
 
             # B Button - API Server
             if GPIO.input(B_BUTTON):
-                if (ButtonState.b_counter == DEBOUNCE_POLLS_MIN):
+                if ButtonState.b_counter == DEBOUNCE_POLLS_MIN:
                     if DEBUG:
                         print("Pressed B Button - API Server")
                     tools_handler.button_b_action()
                     ButtonState.b_counter += 1
-                elif (ButtonState.b_counter < DEBOUNCE_POLLS_MIN):
+                elif ButtonState.b_counter < DEBOUNCE_POLLS_MIN:
                     ButtonState.b_counter += 1
             else:
-                if (ButtonState.b_counter >= DEBOUNCE_POLLS_MIN):
+                if ButtonState.b_counter >= DEBOUNCE_POLLS_MIN:
                     if DEBUG:
                         print("Released B Button")
                 ButtonState.b_counter = 0
 
             # X Button - Code Quality
             if GPIO.input(X_BUTTON):
-                if (ButtonState.x_counter == DEBOUNCE_POLLS_MIN):
+                if ButtonState.x_counter == DEBOUNCE_POLLS_MIN:
                     if DEBUG:
                         print("Pressed X Button - Code Quality")
                     tools_handler.button_x_action()
                     ButtonState.x_counter += 1
-                elif (ButtonState.x_counter < DEBOUNCE_POLLS_MIN):
+                elif ButtonState.x_counter < DEBOUNCE_POLLS_MIN:
                     ButtonState.x_counter += 1
             else:
-                if (ButtonState.x_counter >= DEBOUNCE_POLLS_MIN):
+                if ButtonState.x_counter >= DEBOUNCE_POLLS_MIN:
                     if DEBUG:
                         print("Released X Button")
                 ButtonState.x_counter = 0
 
             # Y Button - Python REPL
             if GPIO.input(Y_BUTTON):
-                if (ButtonState.y_counter == DEBOUNCE_POLLS_MIN):
+                if ButtonState.y_counter == DEBOUNCE_POLLS_MIN:
                     if DEBUG:
                         print("Pressed Y Button - Python REPL")
                     tools_handler.button_y_action()
                     ButtonState.y_counter += 1
-                elif (ButtonState.y_counter < DEBOUNCE_POLLS_MIN):
+                elif ButtonState.y_counter < DEBOUNCE_POLLS_MIN:
                     ButtonState.y_counter += 1
             else:
-                if (ButtonState.y_counter >= DEBOUNCE_POLLS_MIN):
+                if ButtonState.y_counter >= DEBOUNCE_POLLS_MIN:
                     if DEBUG:
                         print("Released Y Button")
                 ButtonState.y_counter = 0
 
         # Poll Joystick for Updates in Joystick Mode, use arrow keys
-        if (JOYSTICK_ON and ButtonState.JOYSTICK_MODE):
+        if JOYSTICK_ON and ButtonState.JOYSTICK_MODE:
             # Disable for broken joystick
-            if (up_down == -1 and left_right == 0 and
-                    ch0.read() < 70 and ch1.read() < 70):
+            if (
+                up_down == -1
+                and left_right == 0
+                and ch0.read() < 70
+                and ch1.read() < 70
+            ):
                 JOYSTICK_ON = False
                 print_to_dmesg("Joystick disabled.")
 
@@ -591,42 +604,34 @@ def main():
                 i = 0
                 while i < T_LEN_PER_SIDE_Y:
                     if up_down < JOYSTICK_THRESHOLDS_Y[i]:
-                        virtual_mouse.emit(
-                            uinput.REL_Y, -1 * JOYSTICK_MOVEMENT_Y[i]
-                        )
+                        virtual_mouse.emit(uinput.REL_Y, -1 * JOYSTICK_MOVEMENT_Y[i])
                     i += 1
 
                 # Check the up_down channels from the top
                 i = 0
                 while i < T_LEN_PER_SIDE_Y:
-                    if up_down > JOYSTICK_THRESHOLDS_Y[
-                        len(JOYSTICK_THRESHOLDS_Y) - 1 - i
-                    ]:
-                        virtual_mouse.emit(
-                            uinput.REL_Y,
-                            JOYSTICK_MOVEMENT_Y[i]
-                        )
+                    if (
+                        up_down
+                        > JOYSTICK_THRESHOLDS_Y[len(JOYSTICK_THRESHOLDS_Y) - 1 - i]
+                    ):
+                        virtual_mouse.emit(uinput.REL_Y, JOYSTICK_MOVEMENT_Y[i])
                     i += 1
 
                 # Check the left_right channel from the right (invert)
                 i = 0
                 while i < T_LEN_PER_SIDE_X:
                     if left_right < JOYSTICK_THRESHOLDS_X[i]:
-                        virtual_mouse.emit(
-                            uinput.REL_X,
-                            JOYSTICK_MOVEMENT_X[i]
-                        )
+                        virtual_mouse.emit(uinput.REL_X, JOYSTICK_MOVEMENT_X[i])
                     i += 1
 
                 # Check the left_right channel from the left (invert)
                 i = 0
                 while i < T_LEN_PER_SIDE_X:
-                    if left_right > JOYSTICK_THRESHOLDS_X[
-                        len(JOYSTICK_THRESHOLDS_X) - 1 - i
-                    ]:
-                        virtual_mouse.emit(
-                            uinput.REL_X, -1 * JOYSTICK_MOVEMENT_X[i]
-                        )
+                    if (
+                        left_right
+                        > JOYSTICK_THRESHOLDS_X[len(JOYSTICK_THRESHOLDS_X) - 1 - i]
+                    ):
+                        virtual_mouse.emit(uinput.REL_X, -1 * JOYSTICK_MOVEMENT_X[i])
                     i += 1
 
             except:
@@ -634,10 +639,14 @@ def main():
                 pass
 
         # Poll Joystick for Updates in ARROW mode
-        if (JOYSTICK_ON and not ButtonState.JOYSTICK_MODE):
+        if JOYSTICK_ON and not ButtonState.JOYSTICK_MODE:
             # Disable for broken joystick
-            if (up_down == -1 and left_right == 0 and
-                    ch0.read() < 70 and ch1.read() < 70):
+            if (
+                up_down == -1
+                and left_right == 0
+                and ch0.read() < 70
+                and ch1.read() < 70
+            ):
                 JOYSTICK_ON = False
                 print_to_dmesg("Joystick disabled.")
 
@@ -646,7 +655,6 @@ def main():
             left_right = ch1.read()
 
             try:
-
                 # Check the up_down channels from the bottom
                 if up_down > ARROW_THRESHOLD_Y_HIGH:
                     if not ButtonState.down_arrow_pressed:
@@ -713,10 +721,10 @@ def main():
                 pass
 
         # Poll Touch for Updates
-        if (TOUCH_ON):
+        if TOUCH_ON:
             # Disable TS if not found OR a person is holding it down
             # when we startup
-            if (ts == -1 and ch7.read() < 100):
+            if ts == -1 and ch7.read() < 100:
                 ButtonState.ts_counter += 1
                 if ButtonState.ts_counter >= DETECT_OFF_CYCLES:
                     TOUCH_ON = False
@@ -725,8 +733,7 @@ def main():
 
             # Normal TS Read
             ts = ch7.read()
-            if (ts < 100):
-
+            if ts < 100:
                 if DEBUG:
                     print("TS is " + str(ts))
                 X_ABS = read_touch_screen(X_ADDR)
@@ -747,29 +754,17 @@ def main():
                     LAST_X_POS, LAST_Y_POS = X_ABS, Y_ABS
 
                     # Touch Up
-                    if (ButtonState.ts_counter >= DEBOUNCE_POLLS_MIN):
+                    if ButtonState.ts_counter >= DEBOUNCE_POLLS_MIN:
                         if DEBUG:
                             print("Pressed Touchscreen Button.")
-                        if (ButtonState.ts_counter == DEBOUNCE_POLLS_MIN):
-                            virtual_touchscreen.emit(
-                                uinput.BTN_TOUCH,
-                                1,
-                                syn=False
-                            )
-                        virtual_touchscreen.emit(
-                            uinput.ABS_X,
-                            X_ABS,
-                            syn=False
-                        )
-                        virtual_touchscreen.emit(
-                            uinput.ABS_Y,
-                            Y_ABS,
-                            syn=False
-                        )
+                        if ButtonState.ts_counter == DEBOUNCE_POLLS_MIN:
+                            virtual_touchscreen.emit(uinput.BTN_TOUCH, 1, syn=False)
+                        virtual_touchscreen.emit(uinput.ABS_X, X_ABS, syn=False)
+                        virtual_touchscreen.emit(uinput.ABS_Y, Y_ABS, syn=False)
                         virtual_touchscreen.emit(uinput.ABS_MT_PRESSURE, 255)
                         ButtonState.ts_counter += 1
 
-                    elif (ButtonState.ts_counter < DEBOUNCE_POLLS_MIN):
+                    elif ButtonState.ts_counter < DEBOUNCE_POLLS_MIN:
                         ButtonState.ts_counter += 1
                     ButtonState.ts_counter += 1
 
@@ -778,24 +773,17 @@ def main():
                     pass
 
             else:
-                if (ButtonState.ts_counter > 0):
+                if ButtonState.ts_counter > 0:
                     # Touch Up
                     ButtonState.ts_counter = 0
 
                     virtual_touchscreen.emit(uinput.BTN_TOUCH, 0, syn=False)
-                    virtual_touchscreen.emit(
-                        uinput.ABS_X,
-                        LAST_X_POS,
-                        syn=False
-                    )
-                    virtual_touchscreen.emit(
-                        uinput.ABS_Y,
-                        LAST_Y_POS,
-                        syn=False
-                    )
+                    virtual_touchscreen.emit(uinput.ABS_X, LAST_X_POS, syn=False)
+                    virtual_touchscreen.emit(uinput.ABS_Y, LAST_Y_POS, syn=False)
                     virtual_touchscreen.emit(uinput.ABS_MT_PRESSURE, 0)
 
         time.sleep(SLEEP_SEC)
+
 
 if __name__ == "__main__":
     main()

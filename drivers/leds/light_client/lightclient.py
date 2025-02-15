@@ -3,46 +3,110 @@ import socket
 import sys
 import time
 import optparse
-from stored_patterns import LED_Scanner, White_Swell, Rainbow, USA, USA_Swell, Gold_Swell
+from stored_patterns import (
+    LED_Scanner,
+    White_Swell,
+    Rainbow,
+    USA,
+    USA_Swell,
+    Gold_Swell,
+)
 from stored_patterns import Vote_1, Vote_2, Vote_3, Vote_4, Vote_5
-from stored_patterns import Pong_Cyan, Pong_Green, Pong_Red, Pong_Blue, Pong_Violet, Pong_Yellow
-from stored_patterns import Cyan_Wave, Green_Wave, Red_Wave, Blue_Wave, Violet_Wave, Yellow_Wave
-from stored_patterns import Inv_Cyan_Wave, Inv_Green_Wave, Inv_Red_Wave, Inv_Blue_Wave, Inv_Violet_Wave, Inv_Yellow_Wave
+from stored_patterns import (
+    Pong_Cyan,
+    Pong_Green,
+    Pong_Red,
+    Pong_Blue,
+    Pong_Violet,
+    Pong_Yellow,
+)
+from stored_patterns import (
+    Cyan_Wave,
+    Green_Wave,
+    Red_Wave,
+    Blue_Wave,
+    Violet_Wave,
+    Yellow_Wave,
+)
+from stored_patterns import (
+    Inv_Cyan_Wave,
+    Inv_Green_Wave,
+    Inv_Red_Wave,
+    Inv_Blue_Wave,
+    Inv_Violet_Wave,
+    Inv_Yellow_Wave,
+)
 from stored_patterns import OK_GO_PINK, OK_GO_BLUE, OK_GO_GREEN, OK_GO_YELLOW
 from stored_patterns import OK_GO_PURPLE, OK_GO_RED, OK_GO_ORANGE, OK_GO_WHITE
 
 packet_length = 100
 client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
+
 def _send_to_lightsocket(output):
     if len(output) < packet_length:
-        output = '|' + output
-        output = output.rjust(packet_length, '0')
+        output = "|" + output
+        output = output.rjust(packet_length, "0")
     client.sendall(output)
-    #client.send("\n")
+    # client.send("\n")
+
 
 def _dim_light_cmd(cmd, dim):
     factor = float(dim) / float(100)
-    lcmd = cmd.split(',')
+    lcmd = cmd.split(",")
     for i, intensity in enumerate(lcmd[:-1]):
         lcmd[i] = int(float(intensity) * factor)
-    dimmed_lights = ','.join([str(i) for i in lcmd])
+    dimmed_lights = ",".join([str(i) for i in lcmd])
     return dimmed_lights
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     parser = optparse.OptionParser()
 
-    parser.add_option("-p", "--path", dest="path", default="/dev/lightsocket",
-        help="Path to light socket", metavar="PATH")
-    parser.add_option("-d", "--demo", dest="demo", default=1, type="int",
-        help="Built-in demo [0-37]", metavar="DEMO")
-    parser.add_option("-i", "--intensity", dest="intensity", default=100, type="int",
-        help="Light Brightness [0-100]", metavar="INTENSITY")
-    parser.add_option("-n", "--noclear", action="store_true", dest="noclear", default=False,
-        help="Don't clear at end", metavar="NOCLEAR")
-    parser.add_option("-r", "--repeat", dest="repeat", default=3, type="int",
-        help="Times to repeat", metavar="TIMES")
+    parser.add_option(
+        "-p",
+        "--path",
+        dest="path",
+        default="/dev/lightsocket",
+        help="Path to light socket",
+        metavar="PATH",
+    )
+    parser.add_option(
+        "-d",
+        "--demo",
+        dest="demo",
+        default=1,
+        type="int",
+        help="Built-in demo [0-37]",
+        metavar="DEMO",
+    )
+    parser.add_option(
+        "-i",
+        "--intensity",
+        dest="intensity",
+        default=100,
+        type="int",
+        help="Light Brightness [0-100]",
+        metavar="INTENSITY",
+    )
+    parser.add_option(
+        "-n",
+        "--noclear",
+        action="store_true",
+        dest="noclear",
+        default=False,
+        help="Don't clear at end",
+        metavar="NOCLEAR",
+    )
+    parser.add_option(
+        "-r",
+        "--repeat",
+        dest="repeat",
+        default=3,
+        type="int",
+        help="Times to repeat",
+        metavar="TIMES",
+    )
     (options, args) = parser.parse_args()
 
     demo = options.demo
@@ -129,15 +193,14 @@ if __name__ == "__main__":
         elif demo == 37:
             Pattern = OK_GO_WHITE
 
-
     intensity = options.intensity
     if intensity < 0:
         intensity = 0
     elif intensity > 100:
         intensity = 100
 
-    if os.path.exists( options.path ):
-        client.connect( options.path )
+    if os.path.exists(options.path):
+        client.connect(options.path)
     else:
         print("Exiting: Can't find socket.")
         exit(0)
@@ -151,14 +214,16 @@ if __name__ == "__main__":
                 pass
             elif intensity == 100:
                 _send_to_lightsocket(Pattern[y])
-                #time.sleep(.0005)
+                # time.sleep(.0005)
             else:
                 _send_to_lightsocket(_dim_light_cmd(Pattern[y], intensity))
 
     # Cleanup
     noclear = options.noclear
     if not noclear:
-        _send_to_lightsocket("000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000")
+        _send_to_lightsocket(
+            "000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000"
+        )
 
     # Read back - comment out to skip. Printed out by the server.
     # _send_to_lightsocket("PRT")
