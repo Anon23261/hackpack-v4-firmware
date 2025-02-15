@@ -119,15 +119,19 @@ echo "Detected Raspberry Pi model: $PI_MODEL"
 echo "Creating backup of current configuration..."
 backup_config
 
-# Confirm before proceeding
+# Confirm before proceeding (skip in test mode)
 echo ""
 echo "WARNING: This will install Hackpack v4 firmware for $PI_MODEL"
 echo "A backup of your current configuration has been created"
-read -p "Do you want to proceed? (y/n) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Installation cancelled"
-    exit 1
+if [ "$TEST_MODE" != "true" ]; then
+    read -p "Do you want to proceed? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Installation cancelled"
+        exit 1
+    fi
+else
+    echo "Test mode: Auto-confirming installation"
 fi
 
 # Install basic system dependencies
