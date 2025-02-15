@@ -78,8 +78,14 @@ sudo mkdir -p /home/pi/hp_tmp
 #sudo chown -R pi:pi /home/pi/hp_tmp/.authtoken
 
 # Update package lists and install required packages
-sudo apt-get update
-sudo apt-get install --no-install-recommends -y \
+echo "Updating package lists..."
+if ! sudo apt-get update; then
+    echo "Error: Failed to update package lists"
+    exit 1
+fi
+
+echo "Installing system packages..."
+if ! sudo apt-get install --no-install-recommends -y \
     git \
     python3-pip \
     python3-setuptools \
@@ -152,8 +158,13 @@ python3 -m venv /home/pi/venv
 echo 'source /home/pi/venv/bin/activate' >> /home/pi/.bashrc
 
 # Set up development directories
-mkdir -p /home/pi/projects
-mkdir -p /home/pi/projects/payloads
+echo "Creating project directories..."
+for dir in "/home/pi/projects" "/home/pi/projects/payloads" "/home/pi/projects/api"; do
+    if ! mkdir -p "$dir"; then
+        echo "Error: Failed to create directory $dir"
+        exit 1
+    fi
+done
 
 echo ""
 echo "--------------------------------------------------"
@@ -164,8 +175,16 @@ echo "--------------------------------------------------"
 echo ""
 
 # Activate virtual environment and install packages
-source /home/pi/venv/bin/activate
-pip install -r /home/pi/firmware/requirements.txt
+if ! source /home/pi/venv/bin/activate; then
+    echo "Error: Failed to activate virtual environment"
+    exit 1
+fi
+
+echo "Installing Python packages..."
+if ! pip install -r /home/pi/firmware/requirements.txt; then
+    echo "Error: Failed to install Python packages"
+    exit 1
+fi
 
 # Create helpful scripts
 cat > /home/pi/projects/scan_network.py << 'EOL'
