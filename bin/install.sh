@@ -159,6 +159,12 @@ if ! sudo apt-get update; then
 fi
 
 echo "Installing system packages..."
+
+# Configure wireshark for non-superusers in test mode
+if [ "$TEST_MODE" == "true" ]; then
+    echo 'wireshark-common wireshark-common/install-setuid boolean true' | sudo debconf-set-selections
+fi
+
 if ! sudo apt-get install --no-install-recommends -y \
     git \
     python3-pip \
@@ -177,6 +183,12 @@ if ! sudo apt-get install --no-install-recommends -y \
     tmux; then
     echo "Error: Failed to install system packages"
     exit 1
+fi
+
+# Add user to wireshark group in test mode
+if [ "$TEST_MODE" == "true" ]; then
+    sudo usermod -a -G wireshark pi
+    echo "Added pi user to wireshark group"
 fi
 
 # Try to install netcat
