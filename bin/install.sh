@@ -1,89 +1,90 @@
 #!/bin/bash
+# HackPack v4 Firmware Installer
+# For Raspberry Pi Zero W and Zero 2W
 
-# Progress tracking
+# Basic setup
 CURRENT_STEP=1
 TOTAL_STEPS=6
 
-# Colors
+# Simple colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Print functions
+# Basic print function
 print_message() {
-    printf "${2}${1}${NC}"
+    printf "%b%s%b" "$2" "$1" "$NC"
 }
 
+# Error handling
 print_error() {
-    echo -e "${RED}[ERROR] $1${NC}"
+    print_message "[ERROR] $1\n" "$RED"
     exit 1
 }
 
+# Success messages
 print_success() {
-    echo -e "${GREEN}[OK] $1${NC}"
+    print_message "[OK] $1\n" "$GREEN"
 }
 
+# Warning messages
 print_warning() {
-    echo -e "${YELLOW}[WARN] $1${NC}"
+    print_message "[WARN] $1\n" "$YELLOW"
 }
 
+# Step messages
 print_step() {
-    echo -e "${BLUE}[STEP] $1/$TOTAL_STEPS: $2${NC}"
+    print_message "[STEP] $1/$TOTAL_STEPS: $2\n" "$BLUE"
 }
 
+# Progress bar
 show_progress() {
-    echo -n "["
-    for ((i=1; i<=CURRENT_STEP; i++)); do echo -n "="; done
-    for ((i=CURRENT_STEP+1; i<=TOTAL_STEPS; i++)); do echo -n " "; done
-    echo "] $((CURRENT_STEP * 100 / TOTAL_STEPS))%"
+    printf "["
+    i=1
+    while [ $i -le $TOTAL_STEPS ]; do
+        if [ $i -le $CURRENT_STEP ]; then
+            printf "="
+        else
+            printf " "
+        fi
+        i=$((i + 1))
+    done
+    printf "] %d%%\n" "$((CURRENT_STEP * 100 / TOTAL_STEPS))"
     CURRENT_STEP=$((CURRENT_STEP + 1))
 }
 
-# Check command exists
+# Command check
 check_command() {
-    if ! command -v "$1" >/dev/null 2>&1; then
-        print_error "Command not found: $1"
-    fi
+    command -v "$1" >/dev/null 2>&1 || print_error "Command not found: $1"
 }
 
 # Test mode
 TEST_MODE=false
-if [ "$1" = "--test" ]; then
-    TEST_MODE=true
-    print_warning "Running in test mode - skipping hardware checks"
-fi
+[ "$1" = "--test" ] && TEST_MODE=true && print_warning "Test mode enabled"
 
-# System checks
+# System check
 check_system() {
-    print_step "1" "Checking system requirements"
+    print_step "1" "System check"
     
+    # Root check
+    [ "$EUID" -ne 0 ] && print_error "Please run as root"
+    
+    # Hardware check
     if [ "$TEST_MODE" != "true" ]; then
-        if [ ! -f /proc/cpuinfo ]; then
-            print_error "Cannot access /proc/cpuinfo"
-        fi
-
-        model=$(cat /proc/cpuinfo | grep Model | cut -d ':' -f 2 | tr -d ' ')
+        [ ! -f /proc/cpuinfo ] && print_error "Cannot access /proc/cpuinfo"
+        model=$(grep Model /proc/cpuinfo | cut -d ':' -f 2 | tr -d ' ')
         case "$model" in
-            *"ZeroW"*|*"Zero2W"*)
-                print_success "Compatible Pi model detected: $model"
-                ;;
-            *)
-                print_error "This firmware only supports Pi Zero W and Zero 2W (detected: $model)"
-                ;;
+            *"ZeroW"*|*"Zero2W"*) print_success "Found Pi $model" ;;
+            *) print_error "Requires Pi Zero W/2W (found: $model)" ;;
         esac
-    else
-        print_success "Test mode - skipping Pi model check"
     fi
     
-    if [ "$EUID" -ne 0 ]; then
-        print_error "Please run as root"
-    fi
-    
-    print_success "System requirements met"
+    print_success "System check passed"
     show_progress
 }
 
-# Main
+# Run checks
 check_system
+
