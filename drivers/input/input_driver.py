@@ -1,3 +1,8 @@
+"""
+Input Driver for HackPack v4. 
+This driver has been modified to support OTG USB for mouse and keyboard input. 
+"""
+
 """HackPack v4 input driver.
 
 Written in python because C takes too long to prototype. Could be rewritten
@@ -131,7 +136,7 @@ if XY_REVERSED:
     X_ADDR, Y_ADDR = Y_ADDR, X_ADDR
 
 if DEBUG:
-    print SHUTDOWN_MAX, SLEEP_SEC, DEBOUNCE_POLLS_MIN
+    print(SHUTDOWN_MAX, SLEEP_SEC, DEBOUNCE_POLLS_MIN)
 
 
 def read_touch_screen(channel):
@@ -296,7 +301,7 @@ class ButtonState:
         cls.JOYSTICK_MODE = True
 
         if DEBUG:
-            print "Switching to JOYSTICK mode"
+            print ("Switching to JOYSTICK mode")
 
     @classmethod
     def switch_to_arrow_mode(cls):
@@ -319,7 +324,7 @@ class ButtonState:
 
         cls.JOYSTICK_MODE = False
         if DEBUG:
-            print "Switching to ARROW mode"
+            print ("Switching to ARROW mode")
 
 
 def main():
@@ -397,8 +402,33 @@ def main():
         os.remove(SOCKET_PATH)
 
     SOCK.bind(SOCKET_PATH)
-    os.chmod(SOCKET_PATH, 0777)
+    os.chmod(SOCKET_PATH, 0o777)
     fcntl.fcntl(SOCK, fcntl.F_SETFL, os.O_NONBLOCK)
+
+    # Add USB handling code here.
+    import usb.core
+    import usb.util
+
+    # find the USB device
+    dev = usb.core.find(idVendor=0x03EB, idProduct=0x6124)
+
+    # was it found?
+    if dev is None:
+        raise ValueError('Device not found')
+
+    # detach the kernel driver
+    if dev.is_kernel_driver_active(0):
+        dev.detach_kernel_driver(0)
+
+    # claim the device
+    usb.util.claim_interface(dev, 0)
+
+    # release the device
+    usb.util.release_interface(dev, 0)
+
+    # reattach the kernel driver
+    if dev.is_kernel_driver_active(0):
+        dev.attach_kernel_driver(0)
 
     # Big loop incoming.
     while(1):

@@ -1,21 +1,6 @@
-
-import ast
-import fcntl
-import json
-import os
-import sys
-import struct
-import socket
-import struct
-import subprocess
-import sys
-import threading
-import time
-import webview
-import collections
-import random
-import math
-from pynput import keyboard
+"""
+Kiosk features have been removed to focus on Python development.
+"""
 
 # Import LED python library
 FIRMWARE_PATH = '/home/pi/firmware'
@@ -514,7 +499,7 @@ class BrowserApi:
                     _max_lights = new_int
                     self._max_lights = new_int
                     if self._is_debug:
-                        print("New intensity: " + _max_lights)
+                        print("New intensity: " + str(_max_lights))
                     response = {
                         'message': 'ok'
                     }
@@ -698,11 +683,11 @@ class BrowserApi:
 
         if u'message' in p:
             p_dict = p[u'message'].split(',')
-            print len(p_dict)
+            print(len(p_dict))
             if u'message' in p and len(p_dict) == 16:
                 cmd_dict = []
                 cmd_dict.append(p[u'message'])
-                print cmd_dict
+                print(cmd_dict)
                 self.call_light_sequence(cmd_dict)
                 response = {
                     'message': 'ok'
@@ -729,10 +714,10 @@ class BrowserApi:
             }
             return json.dumps(response)
 
-        if u'message' in p_dict and len(p_dict[u'message'].split(',')) == 16:
+        if u'message' in p and len(p[u'message'].split(',')) == 16:
             cmd_dict = []
             cmd_dict.append("CLR")
-            cmd_dict.append(p_dict[u'message'])
+            cmd_dict.append(p[u'message'])
             cmd_dict.append("SHW")
             self.call_light_sequence(cmd_dict)
             response = {
@@ -761,7 +746,7 @@ def file_monitor():
 
     while _fileMonitorActive:
         time.sleep(5)
-        print 'Checking file..'
+        print('Checking file..')
 
         file_path = '/home/pi/config.txt'
         file_exists = os.path.isfile(file_path)
