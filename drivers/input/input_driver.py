@@ -132,7 +132,7 @@ if XY_REVERSED:
     X_ADDR, Y_ADDR = Y_ADDR, X_ADDR
 
 if DEBUG:
-    print SHUTDOWN_MAX, SLEEP_SEC, DEBOUNCE_POLLS_MIN
+    print(SHUTDOWN_MAX, SLEEP_SEC, DEBOUNCE_POLLS_MIN)
 
 
 def read_touch_screen(channel):
@@ -297,7 +297,7 @@ class ButtonState:
         cls.JOYSTICK_MODE = True
 
         if DEBUG:
-            print "Switching to JOYSTICK mode"
+            print("Switching to JOYSTICK mode")
 
     @classmethod
     def switch_to_arrow_mode(cls):
@@ -320,7 +320,7 @@ class ButtonState:
 
         cls.JOYSTICK_MODE = False
         if DEBUG:
-            print "Switching to ARROW mode"
+            print("Switching to ARROW mode")
 
 
 def main():
