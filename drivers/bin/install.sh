@@ -21,7 +21,7 @@ echo ""
 # sudo cp /home/pi/firmware/bin/root/boot/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
 echo "" | sudo tee --append /etc/wpa_supplicant/wpa_supplicant.conf
 echo "network={" | sudo tee --append /etc/wpa_supplicant/wpa_supplicant.conf
-echo "    ssid=\"SETUO-06D9\"" | sudo tee --append /etc/wpa_supplicant/wpa_supplicant.conf
+echo "    ssid=\"SETUP-06D9\"" | sudo tee --append /etc/wpa_supplicant/wpa_supplicant.conf
 echo "    psk=\"earth8584caught\"" | sudo tee --append /etc/wpa_supplicant/wpa_supplicant.conf
 echo "    id_str=\"setup_06d9\"" | sudo tee --append /etc/wpa_supplicant/wpa_supplicant.conf
 echo "}" | sudo tee --append /etc/wpa_supplicant/wpa_supplicant.conf
