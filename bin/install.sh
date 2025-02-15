@@ -41,7 +41,7 @@ if [ "$PI_MODEL" = "unknown" ]; then
     echo "Error: Unsupported Raspberry Pi model detected"
     echo "This firmware only supports Pi Zero W and Pi Zero 2W"
     exit 1
-}
+fi
 
 echo "Detected Raspberry Pi model: $PI_MODEL"
 
