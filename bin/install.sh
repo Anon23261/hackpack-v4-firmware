@@ -36,17 +36,20 @@ step() {
 
 # Progress display
 progress() {
-    local bar=""
-    local i=1
-    while [ "$i" -le "$TOTAL_STEPS" ]; do
-        if [ "$i" -le "$CURRENT_STEP" ]; then
-            bar="${bar}="
-        else
-            bar="${bar} "
-        fi
+    local dots
+    dots=""
+    i=1
+    while [ "$i" -le "$CURRENT_STEP" ]
+    do
+        dots="$dots="
         i=$((i + 1))
     done
-    printf "[%s] %d%%\n" "$bar" "$((CURRENT_STEP * 100 / TOTAL_STEPS))"
+    while [ "$i" -le "$TOTAL_STEPS" ]
+    do
+        dots="$dots "
+        i=$((i + 1))
+    done
+    msg "[$dots] $((CURRENT_STEP * 100 / TOTAL_STEPS))%" "$BLUE"
     CURRENT_STEP=$((CURRENT_STEP + 1))
 }
 
