@@ -102,6 +102,7 @@ if ! sudo apt-get install --no-install-recommends -y \
     nginx \
     screen \
     tmux
+fi
 
 # Install Python security and development packages
 sudo pip3 install --no-cache-dir \
@@ -221,26 +222,23 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
 
-app = FastAPI(title="IoT Security API")
-
 class Device(BaseModel):
     name: str
     ip: str
-    status: str
+    mac: str
 
-devices = []
+app = FastAPI(title="IoT Security API")
 
 @app.get("/")
 async def read_root():
-    return {"status": "online", "message": "IoT Security API"}
+    return {"message": "Welcome to IoT Security API"}
 
 @app.get("/devices")
 async def get_devices():
-    return devices
+    return {"devices": []}
 
 @app.post("/devices")
 async def add_device(device: Device):
-    devices.append(device)
     return device
 
 if __name__ == "__main__":
