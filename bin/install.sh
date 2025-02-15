@@ -117,27 +117,7 @@ sudo bash /home/pi/firmware/cli/bin/install.sh
 echo ""
 echo "--------------------------------------------------"
 echo ""
-echo "(4 of 5) Installing Kiosk functionality..."
-echo ""
-echo "--------------------------------------------------"
-echo ""
-
-sudo apt-get install -y libgtk-3-dev
-sudo apt-get install --no-install-recommends -y midori
-sudo apt-get install --no-install-recommends -y scons
-sudo apt-get install --no-install-recommends -y swig
-sudo apt-get install --no-install-recommends -y swig
-sudo apt-get install --no-install-recommends -y gir1.2-webkit-3.0
-sudo apt-get install --no-install-recommends -y libgtk-3.0
-sudo apt-get install --no-install-recommends -y matchbox
-
-sudo pip install pywebview[gtk3]
-sudo bash /home/pi/firmware/kiosk/bin/install.sh
-
-echo ""
-echo "--------------------------------------------------"
-echo ""
-echo "(5 of 5) Optional games and input..."
+echo "(4 of 4) Optional games and input..."
 echo ""
 echo "--------------------------------------------------"
 echo ""
@@ -155,7 +135,7 @@ sudo apt-get install -y libsdl-mixer1.2-dev libsdl-net1.2 libsdl-net1.2-dev
 echo ""
 echo "--------------------------------------------------"
 echo ""
-echo "(6 of 5) Final steps and aesthetics"
+echo "(5 of 5) Final steps and aesthetics"
 echo ""
 echo "--------------------------------------------------"
 echo ""
