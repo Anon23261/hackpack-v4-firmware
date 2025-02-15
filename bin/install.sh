@@ -187,6 +187,11 @@ fi
 
 # Add user to wireshark group in test mode
 if [ "$TEST_MODE" == "true" ]; then
+    # Create wireshark group if it doesn't exist
+    if ! getent group wireshark > /dev/null; then
+        sudo groupadd wireshark
+        echo "Created wireshark group"
+    fi
     sudo usermod -a -G wireshark pi
     echo "Added pi user to wireshark group"
 fi
