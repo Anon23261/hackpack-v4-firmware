@@ -131,7 +131,7 @@ if ! sudo apt-get install --no-install-recommends -y \
     nmap \
     wireshark \
     tcpdump \
-    netcat \
+    netcat-traditional || netcat-openbsd \
     sqlite3 \
     nginx \
     screen \
