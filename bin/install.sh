@@ -227,40 +227,53 @@ echo "Installing Python packages..."
 # Create a temporary requirements file
 cat > /tmp/requirements.txt << 'EOL'
 requests==2.31.0
-flask==3.0.0
-fastapi==0.104.1
-uvicorn==0.24.0
-sqlalchemy==2.0.23
+flask==2.3.3
+fastapi==0.95.2
+uvicorn==0.22.0
+sqlalchemy==2.0.19
 python-dotenv==1.0.0
-pwntools==4.11.0
 scapy==2.5.0
-cryptography==41.0.5
-pytest==7.4.3
-black==23.11.0
-pylint==3.0.2
+pytest==7.4.0
+black==23.7.0
+pylint==2.17.5
 jupyter==1.0.0
+EOL
+
+# Create a second requirements file for packages that need special handling
+cat > /tmp/requirements_extra.txt << 'EOL'
+cryptography==39.0.2
+bcrypt==4.0.1
+pwntools==4.9.0
 EOL
 
 # Function to install Python packages
 install_python_packages() {
+    local req_file=$1
     # First try with --break-system-packages
     if pip3 --version | grep -q "pip 23"; then
         echo "Using pip 23+ with --break-system-packages"
-        sudo pip3 install --no-cache-dir --break-system-packages -r /tmp/requirements.txt
+        sudo pip3 install --no-cache-dir --break-system-packages -r "$req_file"
         return $?
     fi
 
     # If not pip 23+, try standard install
     echo "Using standard pip install"
-    sudo pip3 install --no-cache-dir -r /tmp/requirements.txt
+    sudo pip3 install --no-cache-dir -r "$req_file"
     return $?
 }
 
-# Attempt installation
-if ! install_python_packages; then
-    echo "Error: Failed to install Python packages"
-    rm /tmp/requirements.txt
+# Install main packages
+echo "Installing main Python packages..."
+if ! install_python_packages /tmp/requirements.txt; then
+    echo "Error: Failed to install main Python packages"
+    rm /tmp/requirements.txt /tmp/requirements_extra.txt
     exit 1
+fi
+
+# Install extra packages
+echo "Installing extra Python packages..."
+if ! install_python_packages /tmp/requirements_extra.txt; then
+    echo "Warning: Some extra Python packages failed to install"
 fi
 
 # Clean up
