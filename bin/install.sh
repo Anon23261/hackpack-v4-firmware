@@ -249,30 +249,43 @@ EOL
 # Function to install Python packages
 install_python_packages() {
     local req_file=$1
-    # First try with --break-system-packages
+    local ignore_installed=$2
+    
+    # Build pip command
+    local pip_cmd="sudo pip3 install --no-cache-dir"
+    
+    # Add --ignore-installed if requested
+    if [ "$ignore_installed" = "true" ]; then
+        pip_cmd="$pip_cmd --ignore-installed"
+    fi
+    
+    # Add --break-system-packages for pip 23+
     if pip3 --version | grep -q "pip 23"; then
         echo "Using pip 23+ with --break-system-packages"
-        sudo pip3 install --no-cache-dir --break-system-packages -r "$req_file"
-        return $?
+        pip_cmd="$pip_cmd --break-system-packages"
+    else
+        echo "Using standard pip install"
     fi
-
-    # If not pip 23+, try standard install
-    echo "Using standard pip install"
-    sudo pip3 install --no-cache-dir -r "$req_file"
+    
+    # Run pip install
+    $pip_cmd -r "$req_file"
     return $?
 }
 
-# Install main packages
+# First try without --ignore-installed
 echo "Installing main Python packages..."
-if ! install_python_packages /tmp/requirements.txt; then
-    echo "Error: Failed to install main Python packages"
-    rm /tmp/requirements.txt /tmp/requirements_extra.txt
-    exit 1
+if ! install_python_packages /tmp/requirements.txt false; then
+    echo "Retrying with --ignore-installed..."
+    if ! install_python_packages /tmp/requirements.txt true; then
+        echo "Error: Failed to install main Python packages"
+        rm /tmp/requirements.txt /tmp/requirements_extra.txt
+        exit 1
+    fi
 fi
 
 # Install extra packages
 echo "Installing extra Python packages..."
-if ! install_python_packages /tmp/requirements_extra.txt; then
+if ! install_python_packages /tmp/requirements_extra.txt true; then
     echo "Warning: Some extra Python packages failed to install"
 fi
 
