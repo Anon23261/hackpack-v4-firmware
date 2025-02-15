@@ -1,4 +1,6 @@
-# 🌟 Hackpack v4 Firmware
+# 🌟 Hackpack v4 Python Development Toolkit
+
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-blue) ![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)
 
 ## What is Hackpack?
 
@@ -14,10 +16,14 @@ At its heart, Hackpack v4 is a **Raspberry Pi Zero W** equipped with:
 
 It boots into a custom browser view that gives any website it loads access to the joystick, game buttons, and control of the lights on the LED bar.
 
-### Firmware
+### Overview
 
-Hackpack v4 Firmware manages system-level components for the Hackpack v4 hardware drivers that manage the
-onboard screen, LEDs, and gamepad.
+The Hackpack v4 Python Development Toolkit provides a comprehensive setup for various Python development tasks, including:
+- Web Development
+- Security Tools
+- Data Manipulation
+- Networking
+- Automation
 
 ## 📦 Installation
 
@@ -31,17 +37,19 @@ You can get the image files at the Raspberry Pi foundation's website:
 
 ### Get the Codebase
 
-To get started, clone this repo into `/home/pi/firmware`. The codebase depends on
-being installed at `/home/pi/firmware` currently.
+To get started, clone this repo into `/home/pi/firmware`:
 
-Once cloned locally, run:
+```bash
+git clone https://github.com/Anon23261/hackpack-v4-firmware.git /home/pi/firmware
+```
+
+Once cloned locally, run the following command to install:
 
 ```bash
 sudo bash /home/pi/firmware/bin/install.sh
 ```
 
-This master install script, in turn, runs the install
-scripts for each system component - drivers, and kiosk.
+This master install script runs the install scripts for each system component.
 
 ## ⚙️ Functionality
 
@@ -65,12 +73,24 @@ The `/drivers` directory contains all functionality
 that drives the custom inputs on the device - namely
 the joystick and control buttons.
 
+### Web Development
+- **Flask**: Set up a basic web application.
+
+### Security Tools
+- **Scapy**: Create network packet manipulation tools.
+
+### Data Manipulation
+- **Pandas**: Analyze data efficiently.
+
+### Networking
+- Create simple TCP clients and servers.
+
+### Automation
+- Automate file operations and tasks.
+
 ## System Control
 
 ### Command-Line Interface
-
-`hackpack kiosk start` - starts the kiosk webview
-`hackpack kiosk stop` - stops the kiosk webview
 
 `hackpack lights led_scanner` - play the led scanner light pattern
 
