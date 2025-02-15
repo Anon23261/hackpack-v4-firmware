@@ -116,20 +116,6 @@ def disable_lightserver():
 
     subprocess.call(['sudo pkill -f "%s/drivers/leds/open_lightsocket"' % _firmware_path], shell=True)
 
-@app.command()
-@click.argument('cmd')
-def kiosk(cmd):
-    if cmd == 'start':
-        _enable_kiosk()
-    elif cmd == 'stop':
-        _disable_kiosk()
-
-def _enable_kiosk():
-    subprocess.call(['python %s/kiosk/kiosk.py &' % _firmware_path], shell=True)
-
-def _disable_kiosk():
-    subprocess.call(['sudo pkill -f "%s/kiosk/kiosk.py"' % _firmware_path], shell=True)
-
 
 # --------------------------------------------
 # HELPER METHODS
