@@ -45,10 +45,18 @@ print_step() {
 
 # Show progress
 show_progress() {
-    local width=50
-    local progress=$((CURRENT_STEP * width / TOTAL_STEPS))
-    printf "\n[%-${width}s] %d%%\n" "$(printf "%${progress}s" | tr ' ' '=')" $((CURRENT_STEP * 100 / TOTAL_STEPS))
-    ((CURRENT_STEP++))
+    echo -ne "\n["
+    for ((i=1; i<=TOTAL_STEPS; i++)); do
+        if [ $i -le $CURRENT_STEP ]; then
+            echo -n "="
+        else
+            echo -n " "
+        fi
+    done
+    echo -n "] "
+    echo -n "$((CURRENT_STEP * 100 / TOTAL_STEPS))%"
+    echo
+    CURRENT_STEP=$((CURRENT_STEP + 1))
 }
 
 # Check command exists
