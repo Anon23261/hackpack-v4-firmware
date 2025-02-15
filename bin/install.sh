@@ -231,11 +231,16 @@ pylint
 jupyter
 EOL
 
-# Install packages using pip with --break-system-packages
-if ! sudo pip3 install --no-cache-dir --break-system-packages -r /tmp/requirements.txt; then
-    echo "Error: Failed to install Python packages"
-    rm /tmp/requirements.txt
-    exit 1
+# Install packages using pip (try with --break-system-packages first)
+if sudo pip3 install --no-cache-dir --break-system-packages -r /tmp/requirements.txt 2>/dev/null; then
+    echo "Installed Python packages with --break-system-packages"
+else
+    echo "Falling back to standard pip install..."
+    if ! sudo pip3 install --no-cache-dir -r /tmp/requirements.txt; then
+        echo "Error: Failed to install Python packages"
+        rm /tmp/requirements.txt
+        exit 1
+    fi
 fi
 
 # Clean up
