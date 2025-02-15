@@ -45,17 +45,19 @@ print_step() {
 
 # Show progress
 show_progress() {
-    echo -ne "\n["
-    for ((i=1; i<=TOTAL_STEPS; i++)); do
+    echo
+    echo -n "["
+    i=1
+    while [ $i -le $TOTAL_STEPS ]; do
         if [ $i -le $CURRENT_STEP ]; then
             echo -n "="
         else
             echo -n " "
         fi
+        i=$((i + 1))
     done
     echo -n "] "
-    echo -n "$((CURRENT_STEP * 100 / TOTAL_STEPS))%"
-    echo
+    echo "$((CURRENT_STEP * 100 / TOTAL_STEPS))%"
     CURRENT_STEP=$((CURRENT_STEP + 1))
 }
 
