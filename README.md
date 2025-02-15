@@ -88,6 +88,16 @@ the joystick and control buttons.
 ### Automation
 - Automate file operations and tasks.
 
+## 🚀 New Features
+
+### OTG USB Support
+
+- The firmware now supports OTG USB connections for mouse and keyboard input, allowing for enhanced interaction with the Hackpack v4.
+
+### Raspberry Pi Model Detection
+
+- The firmware can automatically detect whether the device is a Raspberry Pi Zero W or Zero 2W, ensuring optimal functionality based on the hardware model.
+
 ## System Control
 
 ### Command-Line Interface
