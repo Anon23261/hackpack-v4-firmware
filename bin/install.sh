@@ -79,14 +79,39 @@ sudo mkdir -p /home/pi/hp_tmp
 
 # Update package lists and install required packages
 sudo apt-get update
-sudo apt-get install --no-install-recommends -y git chromium-browser python3-pip python3-setuptools
+sudo apt-get install --no-install-recommends -y \
+    git \
+    python3-pip \
+    python3-setuptools \
+    python3-venv \
+    python3-dev \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    nmap \
+    wireshark \
+    tcpdump \
+    netcat \
+    sqlite3 \
+    nginx \
+    screen \
+    tmux
 
-# Install Node.js using the NodeSource repository
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Update npm to latest version
-sudo npm install -g npm@latest
+# Install Python security and development packages
+sudo pip3 install --no-cache-dir \
+    requests \
+    flask \
+    fastapi \
+    uvicorn \
+    sqlalchemy \
+    python-dotenv \
+    pwntools \
+    scapy \
+    cryptography \
+    pytest \
+    black \
+    pylint \
+    jupyter
 
 # Run Driver install script
 
@@ -117,20 +142,110 @@ sudo bash /home/pi/firmware/cli/bin/install.sh
 echo ""
 echo "--------------------------------------------------"
 echo ""
-echo "(4 of 4) Optional games and input..."
+echo "(4 of 4) Setting up development environment..."
 echo ""
 echo "--------------------------------------------------"
 echo ""
-sudo apt-get install --no-install-recommends -y micropolis
-sudo apt-get install --no-install-recommends -y openttd
-sudo cp -r /home/pi/firmware/assets/chocolate-doom/chocolate-* /usr/local/bin/
-sudo cp -r /home/pi/firmware/assets/matchbox-keyboard/matchbox-keyboard /usr/local/bin/
-mkdir /home/pi/doom
-cp /home/pi/firmware/assets/chocolate-doom/DOOM1.WAD /home/pi/doom
-cp /home/pi/firmware/assets/chocolate-doom/.chocolate-doom-config /home/pi/doom
-cp /home/pi/firmware/assets/chocolate-doom/.chocolate-doom-extra-config /home/pi/doom
-sudo apt-get install -y libsdl1.2debian libsdl-image1.2 libsdl-mixer1.2 timidity
-sudo apt-get install -y libsdl-mixer1.2-dev libsdl-net1.2 libsdl-net1.2-dev
+
+# Create Python virtual environment
+python3 -m venv /home/pi/venv
+echo 'source /home/pi/venv/bin/activate' >> /home/pi/.bashrc
+
+# Set up development directories
+mkdir -p /home/pi/projects
+mkdir -p /home/pi/projects/iot
+mkdir -p /home/pi/projects/api
+mkdir -p /home/pi/projects/security
+
+# Create helpful scripts
+cat > /home/pi/projects/scan_network.py << 'EOL'
+#!/usr/bin/env python3
+from scapy.all import ARP, Ether, srp
+import sys
+
+def scan(ip_range):
+    arp = ARP(pdst=ip_range)
+    ether = Ether(dst="ff:ff:ff:ff:ff:ff")
+    packet = ether/arp
+    result = srp(packet, timeout=3, verbose=0)[0]
+    devices = []
+    for sent, received in result:
+        devices.append({'ip': received.psrc, 'mac': received.hwsrc})
+    return devices
+
+if __name__ == "__main__":
+    ip_range = sys.argv[1] if len(sys.argv) > 1 else "192.168.1.0/24"
+    print(f"Scanning network {ip_range}...")
+    devices = scan(ip_range)
+    print("\nDevices found:")
+    print("IP" + " "*18 + "MAC")
+    print("-" * 40)
+    for device in devices:
+        print(f"{device['ip']:20} {device['mac']}")
+EOL
+
+chmod +x /home/pi/projects/scan_network.py
+
+# Create example API server
+cat > /home/pi/projects/api/example_server.py << 'EOL'
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import uvicorn
+
+app = FastAPI(title="IoT Security API")
+
+class Device(BaseModel):
+    name: str
+    ip: str
+    status: str
+
+devices = []
+
+@app.get("/")
+async def read_root():
+    return {"status": "online", "message": "IoT Security API"}
+
+@app.get("/devices")
+async def get_devices():
+    return devices
+
+@app.post("/devices")
+async def add_device(device: Device):
+    devices.append(device)
+    return device
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+EOL
+
+chmod +x /home/pi/projects/api/example_server.py
+
+# Create README with instructions
+cat > /home/pi/projects/README.md << 'EOL'
+# IoT Security and Development Environment
+
+## Available Tools
+- Network scanning: nmap, wireshark, tcpdump
+- Security: pwntools, scapy, cryptography
+- API Development: flask, fastapi, uvicorn
+- Database: sqlite3, sqlalchemy
+- Code Quality: black, pylint, pytest
+
+## Quick Start
+1. Network scan: `sudo python3 scan_network.py`
+2. Start API server: `cd api && python3 example_server.py`
+3. Run tests: `pytest`
+4. Format code: `black .`
+
+## Virtual Environment
+Activated automatically on login, or manually:
+`source ~/venv/bin/activate`
+
+## Project Structure
+- ~/projects/iot/: IoT-related projects
+- ~/projects/api/: API servers and clients
+- ~/projects/security/: Security tools and scripts
+EOL
 
 echo ""
 echo "--------------------------------------------------"
