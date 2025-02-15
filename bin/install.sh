@@ -214,6 +214,10 @@ echo ""
 
 # Create Python virtual environment
 echo "Creating Python virtual environment..."
+if [ -d /home/pi/venv ]; then
+    echo "Removing existing virtual environment..."
+    rm -rf /home/pi/venv
+fi
 if ! python3 -m venv /home/pi/venv; then
     echo "Error: Failed to create virtual environment"
     exit 1
@@ -245,13 +249,14 @@ echo "--------------------------------------------------"
 echo ""
 
 # Activate virtual environment and install packages
-if ! source /home/pi/venv/bin/activate; then
-    echo "Error: Failed to activate virtual environment"
+if [ ! -f /home/pi/venv/bin/activate ]; then
+    echo "Error: Virtual environment activation script not found"
     exit 1
 fi
 
+# We need to source in a subshell to avoid affecting the main script
 echo "Installing Python packages..."
-if ! pip install -r /home/pi/firmware/requirements.txt; then
+if ! (source /home/pi/venv/bin/activate && pip install -r /home/pi/firmware/requirements.txt); then
     echo "Error: Failed to install Python packages"
     exit 1
 fi
@@ -283,7 +288,9 @@ if __name__ == "__main__":
         print(f"{device['ip']:20} {device['mac']}")
 EOL
 
-chmod +x /home/pi/projects/scan_network.py
+if ! chmod +x /home/pi/projects/scan_network.py; then
+    echo "Warning: Failed to make scan_network.py executable"
+fi
 
 # Create example API server
 cat > /home/pi/projects/api/example_server.py << 'EOL'
@@ -314,7 +321,9 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 EOL
 
-chmod +x /home/pi/projects/api/example_server.py
+if ! chmod +x /home/pi/projects/api/example_server.py; then
+    echo "Warning: Failed to make example_server.py executable"
+fi
 
 # Create README with instructions
 cat > /home/pi/projects/README.md << 'EOL'
@@ -350,11 +359,15 @@ echo "(5 of 5) Final steps and aesthetics"
 echo ""
 echo "--------------------------------------------------"
 echo ""
-# Own all the things!
-sudo chown -R pi:pi /home/pi/
+# Set proper ownership and permissions
+echo "Setting proper ownership and permissions..."
+if ! sudo chown -R pi:pi /home/pi/; then
+    echo "Warning: Failed to set ownership of /home/pi"
+fi
 
-# Execute all the bins!
-chmod -R 755 /home/pi/firmware/bin/
+if ! chmod -R 755 /home/pi/firmware/bin/; then
+    echo "Warning: Failed to set permissions on firmware binaries"
+fi
 
 # Set wallpaper & aesthetics
 if [ -f /home/pi/firmware/assets/images/wallpaper.png ]; then
