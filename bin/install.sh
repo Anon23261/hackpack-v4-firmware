@@ -8,6 +8,12 @@ TEST_MODE=false
 if [[ "$1" == "--test" ]]; then
     TEST_MODE=true
     echo "Running in test mode..."
+    
+    # Create pi user if in test mode
+    if ! id -u pi > /dev/null 2>&1; then
+        sudo useradd -m -s /bin/bash pi
+        echo "Created pi user"
+    fi
 fi
 
 # Safety checks and backup function
