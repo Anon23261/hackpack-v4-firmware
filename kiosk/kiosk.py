@@ -10,7 +10,7 @@ import os
 if platform.system() == 'Linux' and 'kali' in platform.platform().lower():
     FIRMWARE_PATH = '/usr/local/firmware'
 else:
-    FIRMWARE_PATH = '/home/pi/firmware'
+    FIRMWARE_PATH = '/home/ghost/firmware'
 
 sys.path.append(FIRMWARE_PATH + '/drivers/leds/lib_python')
 from led_client import LEDClient
@@ -44,8 +44,8 @@ circular_keys.append(0)
 class BrowserApi:
     """Main Browser API exposed through the webview."""
 
-    _AUTHTOKEN_FILE = os.getenv("AUTHTOKEN_FILE", "/home/pi/hp_tmp/.authtoken")
-    _STORAGE_FILE = os.getenv("STORAGE_FILE", "/home/pi/hp_tmp/.hp_storage_")
+    _AUTHTOKEN_FILE = os.getenv("AUTHTOKEN_FILE", "/home/ghost/hp_tmp/.authtoken")
+    _STORAGE_FILE = os.getenv("STORAGE_FILE", "/home/ghost/hp_tmp/.hp_storage_")
     _LIGHTSOCKET_PATH = '/dev/lightsocket'
     _LIGHTSOCKET_PACKET_LENGTH = 100
     _client = None
@@ -306,7 +306,7 @@ class BrowserApi:
     def autoUpdate(self, params):
         # Use subprocess.check_output if you expect a response
         process = subprocess.check_output(
-            "sudo /home/pi/firmware/bin/system/etc/auto_update.sh",
+            "sudo /home/ghost/firmware/bin/system/etc/auto_update.sh",
             stderr=subprocess.STDOUT,
             shell=True
         )
@@ -317,7 +317,7 @@ class BrowserApi:
 
     def checkWifiConnection(self, params):
         process = subprocess.check_output(
-            "sudo bash /home/pi/firmware/bin/system/etc/check_wifi_curl.sh",
+            "sudo bash /home/ghost/firmware/bin/system/etc/check_wifi_curl.sh",
             stderr=subprocess.STDOUT,
             shell=True
         )
@@ -402,7 +402,7 @@ class BrowserApi:
 
     def inputArrow(self, params):
         subprocess.Popen(
-            "sudo /home/pi/firmware/bin/system/io/input_arrow.sh",
+            "sudo /home/ghost/firmware/bin/system/io/input_arrow.sh",
             stderr=subprocess.STDOUT,
             shell=True
         )
@@ -413,7 +413,7 @@ class BrowserApi:
 
     def inputCursor(self, params):
         subprocess.call(
-            "sudo /home/pi/firmware/bin/system/io/input_cursor.sh",
+            "sudo /home/ghost/firmware/bin/system/io/input_cursor.sh",
             stderr=subprocess.STDOUT,
             shell=True
         )
@@ -555,11 +555,11 @@ class BrowserApi:
             [
                 "chocolate-doom",
                 "-iwad",
-                "/home/pi/doom/DOOM1.WAD",
+                "/home/ghost/doom/DOOM1.WAD",
                 "-config",
-                "/home/pi/doom/.chocolate-doom-config",
+                "/home/ghost/doom/.chocolate-doom-config",
                 "extraconfig",
-                "/home/pi/doom/.chocolate-doom-extra-config"
+                "/home/ghost/doom/.chocolate-doom-extra-config"
             ]
         )
         p.wait()
@@ -631,9 +631,9 @@ class BrowserApi:
             return json.dumps(response)
 
         command = "sudo bash -c" \
-                  "'touch /home/pi/.ili9341_touch.conf && echo \"" + \
+                  "'touch /home/ghost/.ili9341_touch.conf && echo \"" + \
                   str(xy) + str(ud) + str(lr) + \
-                  "\" > /home/pi/.ili9341_touch.conf'"
+                  "\" > /home/ghost/.ili9341_touch.conf'"
 
         if self._is_debug:
             print(command)
@@ -646,7 +646,7 @@ class BrowserApi:
             print(params)
 
         try:
-            os.system('sudo rm /home/pi/hp_tmp/.authtoken 2> /dev/null')
+            os.system('sudo rm /home/ghost/hp_tmp/.authtoken 2> /dev/null')
         except:
             pass
 
@@ -660,7 +660,7 @@ class BrowserApi:
             print(params)
 
         try:
-            os.system('find /home/pi/hp_tmp -mindepth 1 -delete')
+            os.system('find /home/ghost/hp_tmp -mindepth 1 -delete')
         except:
             pass
 
@@ -751,13 +751,13 @@ def file_monitor():
         time.sleep(5)
         print('Checking file..')
 
-        file_path = '/home/pi/config.txt'
+        file_path = '/home/ghost/config.txt'
         file_exists = os.path.isfile(file_path)
 
         # print('Current url: ' + _current_url)
 
         if file_exists:
-            f = open('/home/pi/config.txt', 'r')
+            f = open('/home/ghost/config.txt', 'r')
 
             if f.mode == 'r':
                 requested_url = f.read()
@@ -783,7 +783,7 @@ def on_release(key):
             webview.load_url(HACKPACK_URL)
             os.system(' '.join([
                 'python',
-                '/home/pi/firmware/drivers/leds/light_client/lightclient.py',
+                '/home/ghost/firmware/drivers/leds/light_client/lightclient.py',
                 '-d',
                 '24',
                 '-r',
