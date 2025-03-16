@@ -3,7 +3,14 @@ Kiosk features have been removed to focus on Python development.
 """
 
 # Import LED python library
-FIRMWARE_PATH = '/home/pi/firmware'
+import platform
+import sys
+
+if platform.system() == 'Linux' and 'kali' in platform.platform().lower():
+    FIRMWARE_PATH = '/usr/local/firmware'
+else:
+    FIRMWARE_PATH = '/home/pi/firmware'
+
 sys.path.append(FIRMWARE_PATH + '/drivers/leds/lib_python')
 from led_client import LEDClient
 from stored_patterns import LED_Scanner, White_Swell, Rainbow
