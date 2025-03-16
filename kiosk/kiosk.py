@@ -5,6 +5,7 @@ Kiosk features have been removed to focus on Python development.
 # Import LED python library
 import platform
 import sys
+import os
 
 if platform.system() == 'Linux' and 'kali' in platform.platform().lower():
     FIRMWARE_PATH = '/usr/local/firmware'
@@ -43,8 +44,8 @@ circular_keys.append(0)
 class BrowserApi:
     """Main Browser API exposed through the webview."""
 
-    _AUTHTOKEN_FILE = "/home/pi/hp_tmp/.authtoken"
-    _STORAGE_FILE = "/home/pi/hp_tmp/.hp_storage_"
+    _AUTHTOKEN_FILE = os.getenv("AUTHTOKEN_FILE", "/home/pi/hp_tmp/.authtoken")
+    _STORAGE_FILE = os.getenv("STORAGE_FILE", "/home/pi/hp_tmp/.hp_storage_")
     _LIGHTSOCKET_PATH = '/dev/lightsocket'
     _LIGHTSOCKET_PACKET_LENGTH = 100
     _client = None
@@ -326,13 +327,10 @@ class BrowserApi:
         return json.dumps(response)
 
     def getAuthToken(self, params):
-        # Read AuthToken from file
+        # Read AuthToken from environment variable
         try:
-            f = open(self._AUTHTOKEN_FILE, "r")
-            value = f.read()
-            f.close()
+            value = os.getenv("AUTHTOKEN", "")
             response = {
-                # 'message': str(process).rstrip()
                 'message': value.rstrip()
             }
         except:
@@ -344,7 +342,7 @@ class BrowserApi:
     def setAuthToken(self, params):
         if self._is_debug:
             print(params)
-        # Write AuthToken to file
+        # Write AuthToken to environment variable
         p = self.parse_react_json(params)
         if p == '':
             response = {
@@ -353,9 +351,7 @@ class BrowserApi:
             return json.dumps(response)
 
         if u'authToken' in p:
-            f = open(self._AUTHTOKEN_FILE, "w")
-            f.write(p[u'authToken'])
-            f.close()
+            os.environ["AUTHTOKEN"] = p[u'authToken']
             response = {
                 'message': 'ok'
             }

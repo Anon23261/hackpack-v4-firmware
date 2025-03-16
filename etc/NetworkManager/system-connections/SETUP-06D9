@@ -4,7 +4,6 @@ uuid=9fcb3b6c-4a3f-4d9c-8f4a-5e3d4b7c6a8d
 autoconnect=true
 
 # This configuration is compatible with both Raspberry Pi Zero W and Zero 2W
-# This configuration is compatible with both Raspberry Pi Zero W and Zero 2W
 
 [wifi]
 mode=infrastructure
