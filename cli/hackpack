@@ -35,7 +35,7 @@ if platform.system() == 'Darwin':
 elif platform.system() == 'Linux' and 'kali' in platform.platform().lower():
     _firmware_path = '/usr/local/firmware'
 else:
-    _firmware_path = '/home/pi/firmware'
+    _firmware_path = '/home/ghost/firmware'
 
 sys.path.append(_firmware_path + '/drivers/leds/lib_python')
 

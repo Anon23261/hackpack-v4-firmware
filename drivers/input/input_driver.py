@@ -87,7 +87,7 @@ LEFTRIGHT_INVERTED = False
 
 # To verify
 try:
-    TOUCH_CONF = commands.getstatusoutput("cat /home/pi/.ili9341_touch.conf")
+    TOUCH_CONF = commands.getstatusoutput("cat /home/ghost/.ili9341_touch.conf")
     print(TOUCH_CONF)
     XY_REVERSED, UPDOWN_INVERTED, LEFTRIGHT_INVERTED = \
         map(lambda x: bool(int(x)), list(TOUCH_CONF[1]))
